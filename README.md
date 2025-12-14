@@ -123,7 +123,6 @@ WCAG 2.1 AA compliant:
 
 ## TODO
 
-- [ ] **PAT Login UI**: Add input field on login page to accept Personal Access Token directly (currently only shows a link to create one, but no way to enter it)
 - [ ] **Backend Proxy**: Implement backend proxy for OAuth token exchange to avoid exposing client secret in frontend bundle
 
 ## Contributing

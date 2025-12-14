@@ -4,10 +4,11 @@
  * GitHub OAuth login with personal access token option
  */
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Github } from 'lucide-react'
+import { Github, Key } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import { useAuthStore } from '../stores/authStore'
 import { Button } from '../components/ui/Button'
 
 /**
@@ -15,7 +16,11 @@ import { Button } from '../components/ui/Button'
  */
 export default function LoginPage() {
   const { isAuthenticated, login } = useAuth()
+  const { login: setToken } = useAuthStore()
   const navigate = useNavigate()
+  const [patInput, setPatInput] = useState('')
+  const [patError, setPatError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -23,6 +28,44 @@ export default function LoginPage() {
       navigate('/', { replace: true })
     }
   }, [isAuthenticated, navigate])
+
+  /**
+   * Handle PAT login
+   */
+  const handlePatLogin = async () => {
+    const token = patInput.trim()
+    if (!token) {
+      setPatError('Please enter a token')
+      return
+    }
+
+    setIsLoading(true)
+    setPatError('')
+
+    try {
+      // Validate token by fetching user
+      const response = await fetch('https://api.github.com/user', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/vnd.github+json',
+        },
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Invalid token')
+        }
+        throw new Error('Failed to validate token')
+      }
+
+      // Token is valid, save it
+      setToken(token)
+    } catch (error) {
+      setPatError(error instanceof Error ? error.message : 'Failed to login')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
@@ -71,21 +114,46 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Personal Access Token (Alternative) */}
-            <div className="text-sm text-gray-600 dark:text-gray-400 text-center">
-              <p className="mb-2">
-                Alternatively, use a{' '}
+            {/* Personal Access Token Input */}
+            <div className="space-y-3">
+              <div>
+                <label htmlFor="pat-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Personal Access Token
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    id="pat-input"
+                    type="password"
+                    value={patInput}
+                    onChange={(e) => setPatInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handlePatLogin()}
+                    placeholder="ghp_xxxxxxxxxxxx"
+                    className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <Button
+                    onClick={handlePatLogin}
+                    disabled={isLoading || !patInput.trim()}
+                    variant="secondary"
+                    className="flex items-center gap-2"
+                  >
+                    <Key size={16} />
+                    {isLoading ? 'Validating...' : 'Login'}
+                  </Button>
+                </div>
+                {patError && (
+                  <p className="mt-1 text-sm text-red-500">{patError}</p>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
                 <a
                   href="https://github.com/settings/tokens/new?scopes=notifications,repo,read:user"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 dark:text-blue-400 hover:underline"
                 >
-                  personal access token
+                  Create a token
                 </a>
-              </p>
-              <p className="text-xs text-gray-500">
-                Required scopes: notifications, repo, read:user
+                {' '}with scopes: notifications, repo, read:user
               </p>
             </div>
           </div>
