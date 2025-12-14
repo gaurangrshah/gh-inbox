@@ -5,7 +5,7 @@
  */
 
 import { useVirtualizer } from '@tanstack/react-virtual'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { GitHubNotification } from '../../types/github'
 import { NotificationItem } from './NotificationItem'
 import { NotificationActions } from './NotificationActions'
@@ -19,6 +19,12 @@ interface NotificationListProps {
   notifications: GitHubNotification[]
   isLoading?: boolean
   onRefresh: () => void
+  selectedIds: Set<string>
+  onToggleSelected: (threadId: string) => void
+  autoLoadMore?: boolean
+  hasNextPage?: boolean
+  isFetchingNextPage?: boolean
+  onLoadMore?: () => void
 }
 
 /**
@@ -39,9 +45,16 @@ export function NotificationList({
   notifications,
   isLoading = false,
   onRefresh,
+  selectedIds,
+  onToggleSelected,
+  autoLoadMore = false,
+  hasNextPage = false,
+  isFetchingNextPage = false,
+  onLoadMore,
 }: NotificationListProps) {
   const parentRef = useRef<HTMLDivElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(-1)
+  const loadMoreArmedRef = useRef(true)
 
   const markAsReadMutation = useMarkAsRead()
   const unsubscribeMutation = useUnsubscribe()
@@ -73,6 +86,36 @@ export function NotificationList({
     },
     onRefresh,
   })
+
+  // Optional auto-load-more when the user scrolls near the end of the list
+  useEffect(() => {
+    if (!autoLoadMore) return
+    if (!hasNextPage) return
+    if (!onLoadMore) return
+
+    const el = parentRef.current
+    if (!el) return
+
+    const onScroll = () => {
+      if (!hasNextPage || isFetchingNextPage) return
+      if (!loadMoreArmedRef.current) return
+
+      const remaining = el.scrollHeight - el.scrollTop - el.clientHeight
+      if (remaining < 600) {
+        loadMoreArmedRef.current = false
+        onLoadMore()
+      }
+    }
+
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [autoLoadMore, hasNextPage, isFetchingNextPage, onLoadMore])
+
+  useEffect(() => {
+    if (!isFetchingNextPage) {
+      loadMoreArmedRef.current = true
+    }
+  }, [isFetchingNextPage])
 
   const handleMarkAsRead = (notification: GitHubNotification) => {
     markAsReadMutation.mutate(notification.id)
@@ -135,12 +178,14 @@ export function NotificationList({
               <div className="relative group">
                 <NotificationItem
                   notification={notification}
-                  isSelected={selectedIndex === virtualRow.index}
+                  isFocused={selectedIndex === virtualRow.index}
+                  isChecked={selectedIds.has(notification.id)}
                   onClick={() =>
                     setSelectedIndex((prev) =>
                       prev === virtualRow.index ? -1 : virtualRow.index
                     )
                   }
+                  onToggleChecked={() => onToggleSelected(notification.id)}
                 />
 
                 {/* Action buttons overlay */}

@@ -13,12 +13,19 @@ export type { NotificationReason } from '../types/github'
 export type GroupByOption = 'none' | 'repo' | 'date' | 'reason'
 export type SortOrder = 'newest' | 'oldest' | 'updated'
 
+export interface AvailableRepo {
+  full_name: string
+  totalCount: number
+  unreadCount: number
+}
+
 interface FilterState {
   // Filters
   selectedRepos: string[]
   selectedReasons: NotificationReason[]
   showUnreadOnly: boolean
   showParticipating: boolean
+  availableRepos: AvailableRepo[]
 
   // Grouping and sorting
   groupBy: GroupByOption
@@ -28,6 +35,7 @@ interface FilterState {
   setRepoFilter: (repos: string[]) => void
   setReasonFilter: (reasons: NotificationReason[]) => void
   setUnreadOnly: (unreadOnly: boolean) => void
+  setAvailableRepos: (repos: AvailableRepo[]) => void
   toggleUnreadOnly: () => void
   toggleParticipating: () => void
   setGroupBy: (groupBy: GroupByOption) => void
@@ -40,6 +48,7 @@ const initialState = {
   selectedReasons: [],
   showUnreadOnly: false,
   showParticipating: false,
+  availableRepos: [] as AvailableRepo[],
   groupBy: 'none' as GroupByOption,
   sortOrder: 'newest' as SortOrder,
 }
@@ -55,6 +64,8 @@ export const useFilterStore = create<FilterState>()(
 
       setUnreadOnly: (unreadOnly) => set({ showUnreadOnly: unreadOnly }),
 
+      setAvailableRepos: (repos) => set({ availableRepos: repos }),
+
       toggleUnreadOnly: () =>
         set((state) => ({ showUnreadOnly: !state.showUnreadOnly })),
 
@@ -69,6 +80,14 @@ export const useFilterStore = create<FilterState>()(
     }),
     {
       name: 'github-inbox-filters',
+      partialize: (state) => ({
+        selectedRepos: state.selectedRepos,
+        selectedReasons: state.selectedReasons,
+        showUnreadOnly: state.showUnreadOnly,
+        showParticipating: state.showParticipating,
+        groupBy: state.groupBy,
+        sortOrder: state.sortOrder,
+      }),
     }
   )
 )

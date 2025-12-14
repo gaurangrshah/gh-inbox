@@ -27,7 +27,13 @@ interface NavItem {
  * GitHub-style sidebar
  */
 export function Sidebar() {
-  const { selectedReasons, setReasonFilter } = useFilterStore()
+  const {
+    selectedReasons,
+    setReasonFilter,
+    selectedRepos,
+    setRepoFilter,
+    availableRepos,
+  } = useFilterStore()
 
   const [filtersExpanded, setFiltersExpanded] = useState(true)
   const [reposExpanded, setReposExpanded] = useState(true)
@@ -62,6 +68,14 @@ export function Sidebar() {
       setReasonFilter(selectedReasons.filter((r) => r !== typedReason))
     } else {
       setReasonFilter([...selectedReasons, typedReason])
+    }
+  }
+
+  const toggleRepo = (fullName: string) => {
+    if (selectedRepos.includes(fullName)) {
+      setRepoFilter(selectedRepos.filter((r) => r !== fullName))
+    } else {
+      setRepoFilter([...selectedRepos, fullName])
     }
   }
 
@@ -148,12 +162,71 @@ export function Sidebar() {
 
         {reposExpanded && (
           <div className="space-y-0.5">
-            <p
-              className="px-3 py-2 text-xs"
-              style={{ color: 'var(--color-fg-subtle, #6e7681)' }}
-            >
-              Repositories will appear here based on your notifications
-            </p>
+            {selectedRepos.length > 0 && (
+              <div className="px-3 py-2 flex items-center justify-between">
+                <span className="text-xs" style={{ color: 'var(--color-fg-subtle, #6e7681)' }}>
+                  Filtering {selectedRepos.length} repo{selectedRepos.length === 1 ? '' : 's'}
+                </span>
+                <button
+                  onClick={() => setRepoFilter([])}
+                  className="text-xs text-[#58a6ff] hover:underline"
+                >
+                  Clear
+                </button>
+              </div>
+            )}
+            {availableRepos.length === 0 ? (
+              <p
+                className="px-3 py-2 text-xs"
+                style={{ color: 'var(--color-fg-subtle, #6e7681)' }}
+              >
+                No repositories yet — load notifications to populate this list.
+              </p>
+            ) : (
+              <>
+                {availableRepos.map((repo) => {
+                  const active = selectedRepos.includes(repo.full_name)
+                  return (
+                    <button
+                      key={repo.full_name}
+                      onClick={() => toggleRepo(repo.full_name)}
+                      className={`w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                        active
+                          ? 'bg-[#21262d] text-white'
+                          : 'text-[#8b949e] hover:bg-[#161b22] hover:text-[#e6edf3]'
+                      }`}
+                      title={repo.full_name}
+                    >
+                      <span className="truncate">{repo.full_name}</span>
+                      <span className="flex items-center gap-2 flex-shrink-0">
+                        {repo.unreadCount > 0 && (
+                          <span
+                            className="text-xs px-2 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: 'rgba(88, 166, 255, 0.15)',
+                              color: 'var(--color-accent-fg, #58a6ff)',
+                            }}
+                            aria-label={`${repo.unreadCount} unread`}
+                          >
+                            {repo.unreadCount}
+                          </span>
+                        )}
+                        <span
+                          className="text-xs px-2 py-0.5 rounded-full"
+                          style={{
+                            backgroundColor: 'rgba(110, 118, 129, 0.2)',
+                            color: 'var(--color-fg-muted, #8b949e)',
+                          }}
+                          aria-label={`${repo.totalCount} total`}
+                        >
+                          {repo.totalCount}
+                        </span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </>
+            )}
           </div>
         )}
       </div>
