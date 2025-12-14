@@ -27,24 +27,11 @@ const queryClient = new QueryClient({
 
 /**
  * Protected route wrapper - redirects to login if not authenticated
- * Waits for auth initialization before rendering (important for Tauri keychain)
  */
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-  const isInitialized = useAuthStore((state) => state.isInitialized)
-  const token = useAuthStore((state) => state.token)
 
-  // Wait for auth initialization (especially important in Tauri where token comes from keychain)
-  if (!isInitialized) {
-    return (
-      <div className="flex items-center justify-center h-screen" style={{ backgroundColor: '#0d1117' }}>
-        <div className="text-[#8b949e]">Loading...</div>
-      </div>
-    )
-  }
-
-  // Must have both isAuthenticated AND a valid token
-  if (!isAuthenticated || !token) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />
   }
 

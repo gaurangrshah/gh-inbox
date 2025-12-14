@@ -23,19 +23,10 @@ const queryClient = new QueryClient({
   },
 })
 
-// DEV: Clear localStorage to force fresh state (temporary debug)
-// Remove this after fixing the caching issue
-if (import.meta.env.DEV) {
-  console.log('[DEBUG] Clearing localStorage for fresh state')
-  localStorage.removeItem('github-inbox-filters')
-  localStorage.removeItem('github-inbox-ui')
-}
-
 // Initialize auth from secure storage on app startup
-// In Tauri: loads token from OS keychain (async)
+// In Tauri: loads token from OS keychain
 // In browser: uses persisted localStorage state
-// Note: This is async but the App component waits for isInitialized before rendering protected routes
-void useAuthStore.getState().initialize()
+useAuthStore.getState().initialize()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

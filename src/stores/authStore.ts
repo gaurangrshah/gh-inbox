@@ -53,16 +53,12 @@ export const useAuthStore = create<AuthState>()(
               set({ token, isAuthenticated: true, isInitialized: true })
               return
             }
-            // No token in keychain - reset auth state (fixes stale isAuthenticated from localStorage)
-            set({ token: null, isAuthenticated: false, isInitialized: true })
-            return
           }
-          // In browser, token should already be loaded from localStorage persistence
-          // Just mark as initialized
+          // In browser or no token found, just mark as initialized
           set({ isInitialized: true })
         } catch (error) {
           console.error('Failed to initialize auth:', error)
-          set({ token: null, isAuthenticated: false, isInitialized: true })
+          set({ isInitialized: true })
         }
       },
 
