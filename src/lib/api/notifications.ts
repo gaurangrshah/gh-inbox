@@ -39,7 +39,9 @@ export async function fetchNotifications(
 
   const endpoint = `/notifications${queryParams.toString() ? `?${queryParams.toString()}` : ''}`
 
-  return githubGet<GitHubNotification[]>(endpoint, token)
+  const result = await githubGet<GitHubNotification[]>(endpoint, token)
+  console.log('[DEBUG] fetchNotifications returned:', result?.length, 'items', result)
+  return result
 }
 
 /**
