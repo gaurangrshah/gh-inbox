@@ -228,6 +228,12 @@ export default function InboxPage() {
     [data]
   )
 
+  // DEBUG: Log data flow to find where notifications are lost
+  console.log('[DEBUG] Raw data from query:', data)
+  console.log('[DEBUG] data?.pages:', data?.pages)
+  console.log('[DEBUG] notifications (flattened):', notifications.length, notifications)
+  console.log('[DEBUG] Filters:', { showUnreadOnly, showParticipating, selectedRepos, selectedReasons })
+
   // Derive repository list for sidebar (respect unread + reason filters, but not repo filter itself)
   const availableRepos = useMemo(() => {
     const base = filterNotifications(notifications, {
