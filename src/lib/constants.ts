@@ -49,5 +49,9 @@ export const NOTIFICATION_REASON_LABELS: Record<string, string> = {
   team_mention: 'Team Mention',
 }
 
-export const POLLING_INTERVAL = 60 * 1000 // 60 seconds
+export const DEFAULT_POLLING_INTERVAL = 60 // 60 seconds (stored in seconds)
+export const DEFAULT_PER_PAGE = 50
 export const STALE_TIME = 30 * 1000 // 30 seconds
+
+/** Convert seconds to milliseconds for TanStack Query */
+export const getPollingIntervalMs = (seconds: number) => seconds * 1000

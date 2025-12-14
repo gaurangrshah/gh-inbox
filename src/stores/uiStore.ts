@@ -11,6 +11,11 @@ interface UIState {
   sidebarCollapsed: boolean
   commandPaletteOpen: boolean
   selectedNotificationId: string | null
+  settingsPanelOpen: boolean
+
+  // Settings
+  pollingInterval: number // in seconds
+  perPage: number
 
   // Actions
   setTheme: (theme: 'light' | 'dark') => void
@@ -20,6 +25,10 @@ interface UIState {
   closeCommandPalette: () => void
   toggleCommandPalette: () => void
   selectNotification: (id: string | null) => void
+  openSettingsPanel: () => void
+  closeSettingsPanel: () => void
+  setPollingInterval: (interval: number) => void
+  setPerPage: (perPage: number) => void
 }
 
 export const useUIStore = create<UIState>()(
@@ -29,6 +38,11 @@ export const useUIStore = create<UIState>()(
       sidebarCollapsed: false,
       commandPaletteOpen: false,
       selectedNotificationId: null,
+      settingsPanelOpen: false,
+
+      // Settings defaults
+      pollingInterval: 60, // 60 seconds
+      perPage: 50,
 
       setTheme: (theme) => {
         set({ theme })
@@ -57,13 +71,27 @@ export const useUIStore = create<UIState>()(
 
       selectNotification: (id) =>
         set({ selectedNotificationId: id }),
+
+      openSettingsPanel: () =>
+        set({ settingsPanelOpen: true }),
+
+      closeSettingsPanel: () =>
+        set({ settingsPanelOpen: false }),
+
+      setPollingInterval: (interval) =>
+        set({ pollingInterval: Math.max(30, Math.min(300, interval)) }), // Clamp 30-300s
+
+      setPerPage: (perPage) =>
+        set({ perPage: Math.max(10, Math.min(100, perPage)) }), // Clamp 10-100
     }),
     {
       name: 'github-inbox-ui',
-      // Persist theme and sidebar preferences
+      // Persist theme, sidebar, and settings preferences
       partialize: (state) => ({
         theme: state.theme,
         sidebarCollapsed: state.sidebarCollapsed,
+        pollingInterval: state.pollingInterval,
+        perPage: state.perPage,
       }),
     }
   )

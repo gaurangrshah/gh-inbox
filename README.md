@@ -107,6 +107,7 @@ See [docs/architecture.md](./docs/architecture.md) for detailed technical archit
 | `a` | Select all visible |
 | `e` | Mark selected as read (bulk) |
 | `u` | Unsubscribe from selected (bulk) |
+| `p` | Toggle preview pane |
 | `Escape` | Clear selection / blur search |
 
 ## Accessibility
@@ -133,18 +134,18 @@ This roadmap aims for **GitHub Notifications parity** first (match native behavi
 - [x] **Auto-load on scroll**: optional toggle (persisted) to auto-load next page near bottom
 - [x] **Filter chips**: unread/total counts per repository in sidebar
 
-### P1 — Parity Actions ("can do what GitHub can do")
+### P1 — Parity Actions ✅ ("can do what GitHub can do")
 
 - [x] **Bulk selection**: row checkboxes + select-all checkbox
 - [x] **Bulk actions**: mark read / unsubscribe for selected items
-- [ ] **Better action UX**: clearer loading states + error messaging for rate limit/permissions
-- [ ] **Keyboard shortcuts for bulk actions**
+- [x] **Better action UX**: loading states with progress, toast notifications, error messaging for rate limit/permissions
+- [x] **Keyboard shortcuts for bulk actions**: `a` select all, `e` mark read, `u` unsubscribe
 
-### P2 — Parity UX ("feels like GitHub")
+### P2 — Parity UX ✅ ("feels like GitHub")
 
-- [ ] **Preview pane**: optional right-side preview for the selected notification
-- [ ] **Settings panel**: configure per_page, polling interval, auto-load default
-- [ ] **Better empty/error/loading states**
+- [x] **Preview pane**: optional right-side preview for the selected notification (toggle with `p`)
+- [x] **Settings panel**: configure per_page, polling interval, auto-load default
+- [x] **Better empty/error/loading states**: GitHub Primer styled components
 
 ### Future — Inbox Zero Workflow (optional)
 

@@ -25,6 +25,8 @@ interface NotificationListProps {
   hasNextPage?: boolean
   isFetchingNextPage?: boolean
   onLoadMore?: () => void
+  onSelectNotification?: (notification: GitHubNotification) => void
+  selectedNotificationId?: string
 }
 
 /**
@@ -51,6 +53,8 @@ export function NotificationList({
   hasNextPage = false,
   isFetchingNextPage = false,
   onLoadMore,
+  onSelectNotification,
+  selectedNotificationId,
 }: NotificationListProps) {
   const parentRef = useRef<HTMLDivElement>(null)
   const [selectedIndex, setSelectedIndex] = useState(-1)
@@ -180,11 +184,13 @@ export function NotificationList({
                   notification={notification}
                   isFocused={selectedIndex === virtualRow.index}
                   isChecked={selectedIds.has(notification.id)}
-                  onClick={() =>
+                  isSelected={selectedNotificationId === notification.id}
+                  onClick={() => {
                     setSelectedIndex((prev) =>
                       prev === virtualRow.index ? -1 : virtualRow.index
                     )
-                  }
+                    onSelectNotification?.(notification)
+                  }}
                   onToggleChecked={() => onToggleSelected(notification.id)}
                 />
 

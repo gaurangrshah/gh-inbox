@@ -6,13 +6,17 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Search, CheckCheck, MoreHorizontal, Loader2, AlertCircle, CheckCircle2, X } from 'lucide-react'
+import { Search, CheckCheck, Loader2, AlertCircle, CheckCircle2, X, PanelRightClose, PanelRight, Settings } from 'lucide-react'
 import { useMarkAsRead, useNotificationsInfinite, useMarkAllAsRead, useUnsubscribe } from '../hooks/useNotifications'
 import { useFilterStore } from '../stores/filterStore'
+import { useUIStore } from '../stores/uiStore'
 import { NotificationList } from '../components/notifications/NotificationList'
+import { NotificationPreview } from '../components/notifications/NotificationPreview'
+import { SettingsPanel } from '../components/settings/SettingsPanel'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+import { openInNewTab, apiUrlToWebUrl } from '../lib/utils/url'
 import type { GitHubNotification } from '../types/github'
 
 /** Toast notification state */
@@ -90,6 +94,12 @@ export default function InboxPage() {
     setAvailableRepos,
   } = useFilterStore()
 
+  const {
+    pollingInterval,
+    perPage,
+    openSettingsPanel,
+  } = useUIStore()
+
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement | null>(null)
   const selectAllRef = useRef<HTMLInputElement | null>(null)
@@ -114,8 +124,27 @@ export default function InboxPage() {
     errors: [],
   })
 
+  // Preview pane state
+  const [showPreview, setShowPreview] = useState(() => {
+    try {
+      return localStorage.getItem('showPreview') !== '0'
+    } catch {
+      return true
+    }
+  })
+  const [previewNotification, setPreviewNotification] = useState<GitHubNotification | null>(null)
+
   const markAsReadMutation = useMarkAsRead()
   const unsubscribeMutation = useUnsubscribe()
+
+  // Persist preview preference
+  useEffect(() => {
+    try {
+      localStorage.setItem('showPreview', showPreview ? '1' : '0')
+    } catch {
+      // ignore
+    }
+  }, [showPreview])
 
   /** Add a toast notification */
   const addToast = useCallback((type: Toast['type'], message: string) => {
@@ -186,6 +215,13 @@ export default function InboxPage() {
           }
         },
       },
+      {
+        key: 'p',
+        description: 'Toggle preview pane',
+        handler: () => {
+          setShowPreview((prev) => !prev)
+        },
+      },
     ],
   })
 
@@ -198,7 +234,9 @@ export default function InboxPage() {
     hasNextPage,
     isFetchingNextPage,
   } = useNotificationsInfinite({
-    participating: showParticipating,
+    params: { participating: showParticipating },
+    pollingInterval,
+    perPage,
   })
 
   const notifications = useMemo(
@@ -596,10 +634,25 @@ export default function InboxPage() {
           )}
 
           <button
-            className="p-1.5 rounded-md hover:bg-[#21262d]"
-            aria-label="More options"
+            onClick={() => setShowPreview(!showPreview)}
+            className={`p-1.5 rounded-md hover:bg-[#21262d] ${showPreview ? 'bg-[#21262d]' : ''}`}
+            aria-label={showPreview ? 'Hide preview pane' : 'Show preview pane'}
+            title={showPreview ? 'Hide preview (p)' : 'Show preview (p)'}
           >
-            <MoreHorizontal size={16} className="text-[#8b949e]" />
+            {showPreview ? (
+              <PanelRightClose size={16} className="text-[#8b949e]" />
+            ) : (
+              <PanelRight size={16} className="text-[#8b949e]" />
+            )}
+          </button>
+
+          <button
+            onClick={openSettingsPanel}
+            className="p-1.5 rounded-md hover:bg-[#21262d]"
+            aria-label="Settings"
+            title="Settings"
+          >
+            <Settings size={16} className="text-[#8b949e]" />
           </button>
         </div>
       </div>
@@ -624,39 +677,75 @@ export default function InboxPage() {
         </span>
       </div>
 
-      {/* Notification List */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-hidden">
-          <NotificationList
-            notifications={filteredNotifications}
-            isLoading={isLoading}
-            onRefresh={() => refetch()}
-            selectedIds={selectedIds}
-            onToggleSelected={toggleSelected}
-            autoLoadMore={autoLoadMore}
-            hasNextPage={hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            onLoadMore={() => {
-              if (hasNextPage && !isFetchingNextPage) {
-                void fetchNextPage()
-              }
-            }}
-          />
+      {/* Main content area with list and optional preview */}
+      <div className="flex-1 overflow-hidden flex">
+        {/* Notification List */}
+        <div className={`flex-1 overflow-hidden flex flex-col ${showPreview ? 'max-w-[60%]' : ''}`}>
+          <div className="flex-1 overflow-hidden">
+            <NotificationList
+              notifications={filteredNotifications}
+              isLoading={isLoading}
+              onRefresh={() => refetch()}
+              selectedIds={selectedIds}
+              onToggleSelected={toggleSelected}
+              autoLoadMore={autoLoadMore}
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={() => {
+                if (hasNextPage && !isFetchingNextPage) {
+                  void fetchNextPage()
+                }
+              }}
+              onSelectNotification={(notification) => {
+                if (showPreview) {
+                  setPreviewNotification(notification)
+                }
+              }}
+              selectedNotificationId={previewNotification?.id}
+            />
+          </div>
+
+          {hasNextPage && (
+            <div
+              className="px-4 py-3 flex items-center justify-center"
+              style={{ borderTop: '1px solid #21262d' }}
+            >
+              <button
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="px-3 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50"
+                style={{ borderColor: '#30363d' }}
+              >
+                {isFetchingNextPage ? 'Loading…' : 'Load more'}
+              </button>
+            </div>
+          )}
         </div>
 
-        {hasNextPage && (
-          <div
-            className="px-4 py-3 flex items-center justify-center"
-            style={{ borderTop: '1px solid #21262d' }}
-          >
-            <button
-              onClick={() => fetchNextPage()}
-              disabled={isFetchingNextPage}
-              className="px-3 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50"
-              style={{ borderColor: '#30363d' }}
-            >
-              {isFetchingNextPage ? 'Loading…' : 'Load more'}
-            </button>
+        {/* Preview Pane */}
+        {showPreview && (
+          <div className="w-[40%] min-w-[300px] max-w-[500px]">
+            <NotificationPreview
+              notification={previewNotification}
+              onClose={() => setPreviewNotification(null)}
+              onMarkAsRead={(id) => {
+                markAsReadMutation.mutate(id)
+                addToast('success', 'Marked as read')
+              }}
+              onUnsubscribe={(id) => {
+                if (confirm('Unsubscribe from this thread?')) {
+                  unsubscribeMutation.mutate(id)
+                  addToast('success', 'Unsubscribed')
+                  setPreviewNotification(null)
+                }
+              }}
+              onOpen={(notification) => {
+                const url = apiUrlToWebUrl(notification.subject.url, notification.repository.html_url)
+                openInNewTab(url)
+              }}
+              isMarkingRead={markAsReadMutation.isPending}
+              isUnsubscribing={unsubscribeMutation.isPending}
+            />
           </div>
         )}
       </div>
@@ -691,6 +780,12 @@ export default function InboxPage() {
           ))}
         </div>
       )}
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        autoLoadMore={autoLoadMore}
+        onAutoLoadMoreChange={setAutoLoadMore}
+      />
     </div>
   )
 }

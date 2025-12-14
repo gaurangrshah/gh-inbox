@@ -26,6 +26,7 @@ interface NotificationItemProps {
   notification: GitHubNotification
   isFocused?: boolean
   isChecked?: boolean
+  isSelected?: boolean
   onClick?: () => void
   onToggleChecked?: () => void
 }
@@ -102,6 +103,7 @@ export function NotificationItem({
   notification,
   isFocused = false,
   isChecked = false,
+  isSelected = false,
   onClick,
   onToggleChecked,
 }: NotificationItemProps) {
@@ -116,14 +118,16 @@ export function NotificationItem({
     <div
       onClick={onClick}
       className={`group flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[#21262d] ${
-        isFocused || isChecked
+        isSelected
+          ? 'bg-[#1f6feb33] border-l-2 border-l-[#58a6ff]'
+          : isFocused || isChecked
           ? 'bg-[#161b22]'
           : 'hover:bg-[#161b22]'
       }`}
-      style={{ backgroundColor: notification.unread ? '#0d1117' : '#0d1117' }}
       role="button"
       tabIndex={0}
       aria-label={`Notification: ${notification.subject.title}`}
+      aria-selected={isSelected}
     >
       {/* Checkbox */}
       <input

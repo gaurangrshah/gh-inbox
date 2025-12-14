@@ -19,17 +19,21 @@ import {
   type FetchNotificationsParams,
 } from '../lib/api/notifications'
 import { useAuthStore } from '../stores/authStore'
-import { QUERY_KEYS, POLLING_INTERVAL, STALE_TIME } from '../lib/constants'
+import { QUERY_KEYS, STALE_TIME, DEFAULT_PER_PAGE, DEFAULT_POLLING_INTERVAL, getPollingIntervalMs } from '../lib/constants'
 
-const DEFAULT_PER_PAGE = 50
+interface UseNotificationsOptions {
+  params?: FetchNotificationsParams
+  pollingInterval?: number // in seconds
+}
 
 /**
  * Hook for fetching notifications
  *
- * @param params - Query parameters for filtering
+ * @param options - Query parameters and polling settings
  * @returns Query result with notifications data
  */
-export function useNotifications(params: FetchNotificationsParams = {}) {
+export function useNotifications(options: UseNotificationsOptions = {}) {
+  const { params = {}, pollingInterval = DEFAULT_POLLING_INTERVAL } = options
   const token = useAuthStore((state) => state.token)
 
   return useQuery({
@@ -40,9 +44,15 @@ export function useNotifications(params: FetchNotificationsParams = {}) {
     },
     enabled: !!token,
     staleTime: STALE_TIME,
-    refetchInterval: POLLING_INTERVAL,
+    refetchInterval: getPollingIntervalMs(pollingInterval),
     refetchIntervalInBackground: true,
   })
+}
+
+interface UseNotificationsInfiniteOptions {
+  params?: Omit<FetchNotificationsParams, 'page'>
+  pollingInterval?: number // in seconds
+  perPage?: number
 }
 
 /**
@@ -54,9 +64,13 @@ export function useNotifications(params: FetchNotificationsParams = {}) {
  *
  * Note: We only poll when 1 page is loaded to avoid rate-limit blowups.
  */
-export function useNotificationsInfinite(params: Omit<FetchNotificationsParams, 'page'> = {}) {
+export function useNotificationsInfinite(options: UseNotificationsInfiniteOptions = {}) {
+  const {
+    params = {},
+    pollingInterval = DEFAULT_POLLING_INTERVAL,
+    perPage = DEFAULT_PER_PAGE,
+  } = options
   const token = useAuthStore((state) => state.token)
-  const perPage = params.per_page ?? DEFAULT_PER_PAGE
 
   // Query key excludes `page` because infinite query controls it via pageParam.
   const keyParams: FetchNotificationsParams = {
@@ -87,7 +101,7 @@ export function useNotificationsInfinite(params: Omit<FetchNotificationsParams, 
       const pages = Array.isArray((data as { pages?: unknown[] } | null)?.pages)
         ? (data as { pages: unknown[] }).pages.length
         : 0
-      return pages <= 1 ? POLLING_INTERVAL : false
+      return pages <= 1 ? getPollingIntervalMs(pollingInterval) : false
     },
     refetchIntervalInBackground: true,
   })
