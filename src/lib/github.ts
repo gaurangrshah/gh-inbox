@@ -237,6 +237,16 @@ export async function githubGet<T>(
   }
 
   const data = (await response.json()) as T
+
+  // DEBUG: Log every API response
+  if (endpoint.includes('/notifications')) {
+    console.log('[DEBUG API] Response for', endpoint, ':', {
+      status: response.status,
+      itemCount: Array.isArray(data) ? data.length : 'not array',
+      data: data
+    })
+  }
+
   if (useETag) {
     responseCache.set(url, data as unknown)
   }
