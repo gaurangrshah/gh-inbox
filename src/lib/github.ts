@@ -26,12 +26,6 @@ const etagCache = new Map<string, string>()
 // Used to return stable data on 304 Not Modified.
 const responseCache = new Map<string, unknown>()
 
-// Clear cache on module load to ensure fresh data on app restart
-// This prevents stale cached data from persisting across sessions
-console.log('[GitHub API] Cache cleared on startup')
-etagCache.clear()
-responseCache.clear()
-
 export class GitHubAPIError extends Error {
   constructor(
     message: string,
@@ -48,27 +42,6 @@ export class GitHubAPIError extends Error {
  */
 export function getRateLimitInfo(): RateLimitInfo {
   return { ...rateLimitInfo }
-}
-
-/**
- * Clear cached ETag and response data for a given URL pattern
- * Call this after mutations that change data to force fresh fetches
- */
-export function clearCache(urlPattern?: string): void {
-  if (urlPattern) {
-    // Clear matching entries
-    const fullUrl = `${API_BASE_URL}${urlPattern}`
-    for (const key of etagCache.keys()) {
-      if (key.startsWith(fullUrl)) {
-        etagCache.delete(key)
-        responseCache.delete(key)
-      }
-    }
-  } else {
-    // Clear all cache
-    etagCache.clear()
-    responseCache.clear()
-  }
 }
 
 /**
@@ -237,16 +210,6 @@ export async function githubGet<T>(
   }
 
   const data = (await response.json()) as T
-
-  // DEBUG: Log every API response
-  if (endpoint.includes('/notifications')) {
-    console.log('[DEBUG API] Response for', endpoint, ':', {
-      status: response.status,
-      itemCount: Array.isArray(data) ? data.length : 'not array',
-      data: data
-    })
-  }
-
   if (useETag) {
     responseCache.set(url, data as unknown)
   }
