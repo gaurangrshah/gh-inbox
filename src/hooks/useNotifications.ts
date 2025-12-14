@@ -72,6 +72,9 @@ export function useNotificationsInfinite(options: UseNotificationsInfiniteOption
   } = options
   const token = useAuthStore((state) => state.token)
 
+  // DEBUG: Log token state
+  console.log('[DEBUG useNotificationsInfinite] token exists:', !!token, 'token preview:', token ? token.substring(0, 10) + '...' : 'null')
+
   // Query key excludes `page` because infinite query controls it via pageParam.
   const keyParams: FetchNotificationsParams = {
     ...params,
