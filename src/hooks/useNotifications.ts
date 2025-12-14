@@ -8,7 +8,7 @@
  * - Cache invalidation
  */
 
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query'
 import type { GitHubNotification } from '../types/github'
 import {
   fetchNotifications,
@@ -130,16 +130,33 @@ export function useMarkAsRead() {
         queryKey: QUERY_KEYS.notifications,
       })
 
-      // Optimistically update all notification queries
-      queryClient.setQueriesData<GitHubNotification[]>(
+      // Optimistically update all notification queries (handles both regular and infinite query formats)
+      queryClient.setQueriesData<InfiniteData<GitHubNotification[]> | GitHubNotification[]>(
         { queryKey: QUERY_KEYS.notifications },
         (old) => {
           if (!old) return old
-          return old.map((notification) =>
-            notification.id === threadId
-              ? { ...notification, unread: false }
-              : notification
-          )
+          // Handle infinite query format: { pages: [...], pageParams: [...] }
+          if ('pages' in old && Array.isArray(old.pages)) {
+            return {
+              ...old,
+              pages: old.pages.map((page) =>
+                page.map((notification) =>
+                  notification.id === threadId
+                    ? { ...notification, unread: false }
+                    : notification
+                )
+              ),
+            }
+          }
+          // Handle regular array format
+          if (Array.isArray(old)) {
+            return old.map((notification) =>
+              notification.id === threadId
+                ? { ...notification, unread: false }
+                : notification
+            )
+          }
+          return old
         }
       )
 
@@ -202,17 +219,35 @@ export function useMarkRepositoryAsRead() {
         queryKey: QUERY_KEYS.notifications,
       })
 
-      // Optimistically update notifications for this repo
-      queryClient.setQueriesData<GitHubNotification[]>(
+      // Optimistically update notifications for this repo (handles both regular and infinite query formats)
+      queryClient.setQueriesData<InfiniteData<GitHubNotification[]> | GitHubNotification[]>(
         { queryKey: QUERY_KEYS.notifications },
         (old) => {
           if (!old) return old
-          return old.map((notification) =>
-            notification.repository.owner.login === owner &&
-            notification.repository.name === repo
-              ? { ...notification, unread: false }
-              : notification
-          )
+          // Handle infinite query format: { pages: [...], pageParams: [...] }
+          if ('pages' in old && Array.isArray(old.pages)) {
+            return {
+              ...old,
+              pages: old.pages.map((page) =>
+                page.map((notification) =>
+                  notification.repository.owner.login === owner &&
+                  notification.repository.name === repo
+                    ? { ...notification, unread: false }
+                    : notification
+                )
+              ),
+            }
+          }
+          // Handle regular array format
+          if (Array.isArray(old)) {
+            return old.map((notification) =>
+              notification.repository.owner.login === owner &&
+              notification.repository.name === repo
+                ? { ...notification, unread: false }
+                : notification
+            )
+          }
+          return old
         }
       )
 
