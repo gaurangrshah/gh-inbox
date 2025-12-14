@@ -234,6 +234,15 @@ export default function InboxPage() {
   // Track loaded pages count for pagination display
   const loadedPagesCount = data?.pages?.length ?? 0
 
+  // Debug logging for pagination
+  console.log('[Pagination Debug]', {
+    perPage,
+    loadedPagesCount,
+    hasNextPage,
+    totalNotifications: notifications.length,
+    lastPageLength: data?.pages?.[data.pages.length - 1]?.length,
+  })
+
   // Derive repository list for sidebar (respect unread + reason filters, but not repo filter itself)
   const availableRepos = useMemo(() => {
     const base = filterNotifications(notifications, {
