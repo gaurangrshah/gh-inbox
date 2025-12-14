@@ -23,7 +23,7 @@
       }
     ],
     "security": {
-      "csp": "default-src 'self'; img-src 'self' https://avatars.githubusercontent.com https://*.githubusercontent.com data:; connect-src 'self' https://api.github.com; style-src 'self' 'unsafe-inline'"
+      "csp": "default-src 'self'; img-src 'self' https://avatars.githubusercontent.com https://*.githubusercontent.com data:; connect-src 'self' https://api.github.com ipc://localhost; style-src 'self' 'unsafe-inline'"
     },
     "trayIcon": {
       "iconPath": "icons/icon.png",
