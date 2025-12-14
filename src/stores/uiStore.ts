@@ -93,6 +93,14 @@ export const useUIStore = create<UIState>()(
         pollingInterval: state.pollingInterval,
         perPage: state.perPage,
       }),
+      // Apply theme to document when store rehydrates from localStorage
+      onRehydrateStorage: () => (state) => {
+        if (state?.theme === 'dark') {
+          document.documentElement.classList.add('dark')
+        } else {
+          document.documentElement.classList.remove('dark')
+        }
+      },
     }
   )
 )
