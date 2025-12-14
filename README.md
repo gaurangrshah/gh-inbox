@@ -25,6 +25,8 @@ A modern, efficient GitHub notifications manager with real-time sync, keyboard s
 - **@tanstack/react-virtual** - List virtualization
 - **lucide-react** - Icon library
 - **date-fns** - Date formatting
+- **Tauri v2** - Desktop app framework (Rust backend)
+- **keyring** - OS keychain integration for secure token storage
 
 ## Project Structure
 
@@ -158,21 +160,22 @@ This roadmap aims for **GitHub Notifications parity** first (match native behavi
 
 For local PAT usage, the app is intentionally frontend-only. A secure OAuth flow requires a backend for code exchange (never ship `client_secret` in the frontend bundle).
 
-### Future — Tauri Desktop App
+### In Progress — Tauri Desktop App
 
 Native desktop application with enhanced capabilities:
 
-**Phase 1 - Tauri Shell**
-- [ ] Initialize Tauri project wrapping existing React app
-- [ ] Configure builds for macOS, Windows, Linux
-- [ ] Secure PAT storage using OS keychain (not localStorage)
-- [ ] System tray icon with notification badge
+**Phase 1 - Tauri Shell** ✅
+- [x] Initialize Tauri v2 project wrapping existing React app
+- [x] Configure builds for macOS, Windows, Linux
+- [x] Secure PAT storage using OS keychain (not localStorage)
+- [x] System tray icon with menu (Show Window, Quit)
 
-**Phase 2 - Native Features**
+**Phase 2 - Native Features** (Next)
 - [ ] Native OS notifications for new GitHub notifications
 - [ ] Global keyboard shortcuts (configurable)
 - [ ] Auto-launch on system startup
 - [ ] Menu bar integration (macOS)
+- [ ] Notification badge on tray icon
 
 **Phase 3 - Offline & Sync**
 - [ ] SQLite local database for offline access
@@ -180,6 +183,38 @@ Native desktop application with enhanced capabilities:
 - [ ] Conflict resolution for offline actions
 
 **Benefits**: Secure token storage, native notifications, system tray presence, faster startup, works offline.
+
+## Desktop App (Tauri)
+
+### Prerequisites
+
+- Rust 1.75+ (install via [rustup](https://rustup.rs/))
+- System dependencies for your platform:
+  - **macOS**: Xcode Command Line Tools
+  - **Windows**: Visual Studio Build Tools, WebView2
+  - **Linux**: `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`
+
+### Running the Desktop App
+
+```bash
+# Install Rust (if not installed)
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Run in development mode
+pnpm tauri dev
+
+# Build for production
+pnpm tauri build
+```
+
+### Security
+
+In the desktop app, your GitHub PAT is stored securely in your operating system's keychain:
+- **macOS**: Keychain Access
+- **Windows**: Windows Credential Manager
+- **Linux**: Secret Service (libsecret)
+
+The token is never stored in localStorage when running as a desktop app.
 
 ## Contributing
 

@@ -1,0 +1,27 @@
+[package]
+name = "github-inbox"
+version = "0.1.0"
+description = "GitHub notifications manager desktop app"
+authors = ["GitHub Inbox"]
+license = "MIT"
+repository = "https://github.com/example/github-inbox"
+edition = "2021"
+rust-version = "1.75.0"
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-log = "2"
+tauri-plugin-store = "2"
+tauri-plugin-shell = "2"
+tauri-plugin-notification = "2"
+keyring = "3"
