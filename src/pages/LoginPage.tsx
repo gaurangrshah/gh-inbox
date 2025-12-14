@@ -1,37 +1,31 @@
 /**
- * Login Page
+ * Login Page - GitHub Style
  *
  * GitHub OAuth login with personal access token option
  */
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Github, Key } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useAuthStore } from '../stores/authStore'
-import { Button } from '../components/ui/Button'
 
 /**
- * Login page with GitHub OAuth
+ * GitHub-style login page
  */
 export default function LoginPage() {
-  const { isAuthenticated, login } = useAuth()
+  const { isAuthenticated } = useAuth()
   const { login: setToken } = useAuthStore()
   const navigate = useNavigate()
   const [patInput, setPatInput] = useState('')
   const [patError, setPatError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate('/', { replace: true })
     }
   }, [isAuthenticated, navigate])
 
-  /**
-   * Handle PAT login
-   */
   const handlePatLogin = async () => {
     const token = patInput.trim()
     if (!token) {
@@ -43,7 +37,6 @@ export default function LoginPage() {
     setPatError('')
 
     try {
-      // Validate token by fetching user
       const response = await fetch('https://api.github.com/user', {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -58,7 +51,6 @@ export default function LoginPage() {
         throw new Error('Failed to validate token')
       }
 
-      // Token is valid, save it
       setToken(token)
     } catch (error) {
       setPatError(error instanceof Error ? error.message : 'Failed to login')
@@ -68,117 +60,127 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-md w-full px-6">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div
-            className="inline-flex w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl items-center justify-center mb-4"
-            aria-label="GitHub Inbox logo"
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{ backgroundColor: '#0d1117' }}
+    >
+      {/* GitHub Logo */}
+      <svg
+        height="48"
+        viewBox="0 0 16 16"
+        width="48"
+        className="mb-6"
+        style={{ fill: '#ffffff' }}
+      >
+        <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
+      </svg>
+
+      {/* Sign in heading */}
+      <h1 className="text-2xl font-light mb-6" style={{ color: '#e6edf3' }}>
+        Sign in to GitHub Inbox
+      </h1>
+
+      {/* Login Card */}
+      <div
+        className="w-full max-w-sm rounded-md p-4"
+        style={{
+          backgroundColor: '#161b22',
+          border: '1px solid #30363d',
+        }}
+      >
+        {/* PAT Input */}
+        <div className="mb-4">
+          <label
+            htmlFor="pat-input"
+            className="block text-sm font-medium mb-2"
+            style={{ color: '#e6edf3' }}
           >
-            <Github size={32} className="text-white" aria-hidden="true" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            GitHub Inbox
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage your GitHub notifications in one place
-          </p>
+            Personal access token
+          </label>
+          <input
+            id="pat-input"
+            type="password"
+            value={patInput}
+            onChange={(e) => setPatInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handlePatLogin()}
+            placeholder="ghp_xxxxxxxxxxxx"
+            className="w-full px-3 py-2 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-[#58a6ff]"
+            style={{
+              backgroundColor: '#0d1117',
+              border: '1px solid #30363d',
+              color: '#e6edf3',
+            }}
+          />
+          {patError && (
+            <p className="mt-2 text-sm" style={{ color: '#f85149' }}>
+              {patError}
+            </p>
+          )}
         </div>
 
-        {/* Login Card */}
-        <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-            Sign in to continue
-          </h2>
+        {/* Sign in Button */}
+        <button
+          onClick={handlePatLogin}
+          disabled={isLoading || !patInput.trim()}
+          className="w-full py-2 px-4 text-sm font-medium rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          style={{
+            backgroundColor: '#238636',
+            color: '#ffffff',
+            border: '1px solid rgba(240, 246, 252, 0.1)',
+          }}
+        >
+          {isLoading ? 'Signing in...' : 'Sign in'}
+        </button>
 
-          <div className="space-y-4">
-            {/* OAuth Login */}
-            <Button
-              onClick={login}
-              variant="primary"
-              className="w-full flex items-center justify-center gap-3"
-            >
-              <Github size={20} />
-              Sign in with GitHub
-            </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200 dark:border-gray-800" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-900 text-gray-500">
-                  or
-                </span>
-              </div>
-            </div>
-
-            {/* Personal Access Token Input */}
-            <div className="space-y-3">
-              <div>
-                <label htmlFor="pat-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Personal Access Token
-                </label>
-                <div className="flex gap-2">
-                  <input
-                    id="pat-input"
-                    type="password"
-                    value={patInput}
-                    onChange={(e) => setPatInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePatLogin()}
-                    placeholder="ghp_xxxxxxxxxxxx"
-                    className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <Button
-                    onClick={handlePatLogin}
-                    disabled={isLoading || !patInput.trim()}
-                    variant="secondary"
-                    className="flex items-center gap-2"
-                  >
-                    <Key size={16} />
-                    {isLoading ? 'Validating...' : 'Login'}
-                  </Button>
-                </div>
-                {patError && (
-                  <p className="mt-1 text-sm text-red-500">{patError}</p>
-                )}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                <a
-                  href="https://github.com/settings/tokens/new?scopes=notifications,repo,read:user"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
-                  Create a token
-                </a>
-                {' '}with scopes: notifications, repo, read:user
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Features */}
-        <div className="mt-8 space-y-3">
-          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-            <span>Real-time notification sync</span>
-          </div>
-          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-            <span>Keyboard shortcuts for productivity</span>
-          </div>
-          <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-            <span>Filter by repository, reason, and type</span>
-          </div>
-        </div>
-
-        {/* Privacy Note */}
-        <p className="mt-8 text-xs text-center text-gray-500">
-          Your GitHub token is stored locally in your browser. We never send it to our servers.
+        {/* Create token link */}
+        <p className="mt-4 text-center text-sm" style={{ color: '#8b949e' }}>
+          <a
+            href="https://github.com/settings/tokens/new?scopes=notifications,repo,read:user"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:underline"
+            style={{ color: '#58a6ff' }}
+          >
+            Create a personal access token
+          </a>
         </p>
+      </div>
+
+      {/* Required scopes */}
+      <div
+        className="w-full max-w-sm mt-4 p-4 rounded-md text-center text-sm"
+        style={{
+          border: '1px solid #30363d',
+          color: '#8b949e',
+        }}
+      >
+        Required scopes:{' '}
+        <code
+          className="px-1 py-0.5 rounded text-xs"
+          style={{ backgroundColor: 'rgba(110, 118, 129, 0.4)' }}
+        >
+          notifications
+        </code>{' '}
+        <code
+          className="px-1 py-0.5 rounded text-xs"
+          style={{ backgroundColor: 'rgba(110, 118, 129, 0.4)' }}
+        >
+          repo
+        </code>{' '}
+        <code
+          className="px-1 py-0.5 rounded text-xs"
+          style={{ backgroundColor: 'rgba(110, 118, 129, 0.4)' }}
+        >
+          read:user
+        </code>
+      </div>
+
+      {/* Footer */}
+      <div className="mt-8 flex gap-4 text-xs" style={{ color: '#8b949e' }}>
+        <a href="#" className="hover:underline hover:text-[#58a6ff]">Terms</a>
+        <a href="#" className="hover:underline hover:text-[#58a6ff]">Privacy</a>
+        <a href="#" className="hover:underline hover:text-[#58a6ff]">Security</a>
+        <span>Contact GitHub</span>
       </div>
     </div>
   )

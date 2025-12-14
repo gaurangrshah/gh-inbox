@@ -1,27 +1,26 @@
 /**
- * Notification Item Component
+ * Notification Item Component - GitHub Style
  *
- * Individual notification display with:
- * - Repository name
- * - Title
- * - Type icon (Issue=purple, PR=green, Release=blue, etc.)
- * - Reason badge
- * - Relative timestamp
- * - Unread indicator
+ * Matches GitHub's notification row with:
+ * - Checkbox (left)
+ * - Unread indicator (blue dot)
+ * - Icon (colored by type)
+ * - Repository name / Title
+ * - Labels
+ * - Timestamp (right)
  */
 
 import { formatDistanceToNow } from 'date-fns'
 import {
   GitPullRequest,
-  Circle,
+  CircleDot,
   MessageSquare,
   Tag,
   GitCommit,
-  CheckCircle,
+  AlertTriangle,
+  Shield,
 } from 'lucide-react'
 import type { GitHubNotification } from '../../types/github'
-import { Badge } from '../ui/Badge'
-import { NOTIFICATION_REASON_LABELS } from '../../lib/constants'
 
 interface NotificationItemProps {
   notification: GitHubNotification
@@ -30,127 +29,165 @@ interface NotificationItemProps {
 }
 
 /**
- * Get icon and color for notification type
+ * Get icon and color for notification type - GitHub's actual colors
  */
-function getTypeInfo(type: string) {
+function getTypeInfo(type: string, reason: string) {
+  // Security alerts get special treatment
+  if (reason === 'security_alert') {
+    return {
+      icon: Shield,
+      color: '#f85149', // danger red
+    }
+  }
+
   switch (type) {
     case 'PullRequest':
       return {
         icon: GitPullRequest,
-        color: 'text-green-600 dark:text-green-400',
-        bgColor: 'bg-green-50 dark:bg-green-900/20',
+        color: '#3fb950', // GitHub green for open PRs
       }
     case 'Issue':
       return {
-        icon: Circle,
-        color: 'text-purple-600 dark:text-purple-400',
-        bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+        icon: CircleDot,
+        color: '#3fb950', // GitHub green for open issues
       }
     case 'Release':
       return {
         icon: Tag,
-        color: 'text-blue-600 dark:text-blue-400',
-        bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+        color: '#8b949e',
       }
     case 'Commit':
       return {
         icon: GitCommit,
-        color: 'text-gray-600 dark:text-gray-400',
-        bgColor: 'bg-gray-50 dark:bg-gray-900/20',
+        color: '#8b949e',
       }
     case 'Discussion':
       return {
         icon: MessageSquare,
-        color: 'text-orange-600 dark:text-orange-400',
-        bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+        color: '#a371f7', // purple for discussions
+      }
+    case 'RepositoryVulnerabilityAlert':
+      return {
+        icon: AlertTriangle,
+        color: '#d29922', // warning yellow
       }
     default:
       return {
-        icon: CheckCircle,
-        color: 'text-gray-600 dark:text-gray-400',
-        bgColor: 'bg-gray-50 dark:bg-gray-900/20',
+        icon: CircleDot,
+        color: '#8b949e',
       }
   }
 }
 
 /**
- * Individual notification item
- *
- * @param notification - Notification data
- * @param isSelected - Whether this notification is selected
- * @param onClick - Click handler
+ * Get badge color for reason
+ */
+function getReasonBadge(reason: string): { bg: string; text: string; label: string } | null {
+  const badges: Record<string, { bg: string; text: string; label: string }> = {
+    security_alert: { bg: '#f8514926', text: '#f85149', label: 'security' },
+    ci_activity: { bg: '#388bfd26', text: '#58a6ff', label: 'ci' },
+    review_requested: { bg: '#a371f726', text: '#a371f7', label: 'review' },
+    author: { bg: '#3fb95026', text: '#3fb950', label: 'author' },
+    comment: { bg: '#8b949e26', text: '#8b949e', label: 'comment' },
+  }
+  return badges[reason] || null
+}
+
+/**
+ * GitHub-style notification row
  */
 export function NotificationItem({
   notification,
   isSelected = false,
   onClick,
 }: NotificationItemProps) {
-  const typeInfo = getTypeInfo(notification.subject.type)
+  const typeInfo = getTypeInfo(notification.subject.type, notification.reason)
   const TypeIcon = typeInfo.icon
   const relativeTime = formatDistanceToNow(new Date(notification.updated_at), {
-    addSuffix: true,
+    addSuffix: false,
   })
+  const reasonBadge = getReasonBadge(notification.reason)
 
   return (
     <div
       onClick={onClick}
-      className={`group relative flex items-start gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
+      className={`group flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[#21262d] ${
         isSelected
-          ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500'
-          : 'hover:bg-gray-50 dark:hover:bg-gray-900/50'
-      } ${
-        notification.unread
-          ? 'bg-white dark:bg-gray-900'
-          : 'bg-gray-50/50 dark:bg-gray-950/50 opacity-75'
+          ? 'bg-[#161b22]'
+          : 'hover:bg-[#161b22]'
       }`}
+      style={{ backgroundColor: notification.unread ? '#0d1117' : '#0d1117' }}
       role="button"
       tabIndex={0}
       aria-label={`Notification: ${notification.subject.title}`}
     >
-      {/* Unread Indicator */}
-      {notification.unread && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-blue-500 rounded-full" />
-      )}
+      {/* Checkbox */}
+      <input
+        type="checkbox"
+        checked={isSelected}
+        onChange={() => {}}
+        className="w-4 h-4 rounded border-[#30363d] bg-transparent checked:bg-[#58a6ff] focus:ring-0 focus:ring-offset-0"
+        onClick={(e) => e.stopPropagation()}
+      />
 
-      {/* Type Icon */}
-      <div className={`flex-shrink-0 p-2 rounded ${typeInfo.bgColor}`}>
-        <TypeIcon size={18} className={typeInfo.color} />
+      {/* Unread Indicator */}
+      <div className="w-2 flex-shrink-0">
+        {notification.unread && (
+          <div className="w-2 h-2 rounded-full bg-[#58a6ff]" />
+        )}
       </div>
 
+      {/* Type Icon */}
+      <TypeIcon
+        size={16}
+        className="flex-shrink-0"
+        style={{ color: typeInfo.color }}
+      />
+
       {/* Content */}
-      <div className="flex-1 min-w-0">
-        {/* Repository */}
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-            {notification.repository.full_name}
-          </span>
-          <Badge variant="secondary" size="sm">
-            {NOTIFICATION_REASON_LABELS[notification.reason] || notification.reason}
-          </Badge>
-        </div>
+      <div className="flex-1 min-w-0 flex items-center gap-2">
+        {/* Repository name */}
+        <span className="text-sm font-medium text-[#8b949e] flex-shrink-0">
+          {notification.repository.full_name}
+        </span>
 
         {/* Title */}
-        <h3
-          className={`text-sm mb-1 line-clamp-2 ${
+        <span
+          className={`text-sm truncate ${
             notification.unread
-              ? 'font-medium text-gray-900 dark:text-gray-100'
-              : 'font-normal text-gray-700 dark:text-gray-300'
+              ? 'text-[#e6edf3] font-medium'
+              : 'text-[#8b949e]'
           }`}
         >
           {notification.subject.title}
-        </h3>
+        </span>
 
-        {/* Metadata */}
-        <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-500">
-          <span>{notification.subject.type}</span>
-          <span>•</span>
-          <time dateTime={notification.updated_at}>{relativeTime}</time>
-        </div>
+        {/* Reason Badge */}
+        {reasonBadge && (
+          <span
+            className="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium"
+            style={{
+              backgroundColor: reasonBadge.bg,
+              color: reasonBadge.text,
+            }}
+          >
+            {reasonBadge.label}
+          </span>
+        )}
       </div>
 
-      {/* Hover Actions */}
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-        {/* Action buttons will be added here */}
+      {/* Timestamp & Avatar */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        <span className="text-xs text-[#8b949e]">{relativeTime}</span>
+
+        {/* Repository owner avatar (if available) */}
+        {notification.repository.owner && (
+          <img
+            src={notification.repository.owner.avatar_url}
+            alt=""
+            className="w-5 h-5 rounded-full"
+          />
+        )}
       </div>
     </div>
   )

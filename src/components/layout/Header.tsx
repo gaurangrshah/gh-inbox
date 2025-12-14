@@ -1,18 +1,17 @@
 /**
- * Header Component
+ * Header Component - GitHub Style
  *
- * Application header with user avatar, refresh button, rate limit indicator, and logout
+ * Matches GitHub's notification page header
  */
 
-import { RefreshCw, LogOut, Activity } from 'lucide-react'
+import { Bell, RefreshCw, LogOut } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useRefreshNotifications } from '../../hooks/useNotifications'
 import { getRateLimitInfo } from '../../lib/github'
-import { ThemeToggle } from '../ui/ThemeToggle'
 import { useState, useEffect } from 'react'
 
 /**
- * Application header with user controls and status indicators
+ * GitHub-style header
  */
 export function Header() {
   const { user, logout } = useAuth()
@@ -20,12 +19,10 @@ export function Header() {
   const [rateLimit, setRateLimit] = useState(getRateLimitInfo())
   const [isRefreshing, setIsRefreshing] = useState(false)
 
-  // Update rate limit info periodically
   useEffect(() => {
     const interval = setInterval(() => {
       setRateLimit(getRateLimitInfo())
-    }, 5000) // Update every 5 seconds
-
+    }, 5000)
     return () => clearInterval(interval)
   }, [])
 
@@ -39,83 +36,72 @@ export function Header() {
   const isRateLimitLow = rateLimitPercentage < 20
 
   return (
-    <header className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
-      <div className="flex items-center justify-between px-6 py-3">
-        {/* Logo and Title */}
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">GI</span>
-          </div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            GitHub Inbox
-          </h1>
-        </div>
+    <header className="h-16 px-4 flex items-center justify-between"
+      style={{ backgroundColor: '#010409', borderBottom: '1px solid #21262d' }}>
+      {/* Left - Logo and Title */}
+      <div className="flex items-center gap-4">
+        {/* GitHub Logo */}
+        <svg height="32" viewBox="0 0 16 16" width="32" className="fill-white">
+          <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
+        </svg>
 
-        {/* Actions */}
+        {/* Notifications Title */}
         <div className="flex items-center gap-2">
-          {/* Rate Limit Indicator */}
-          <div
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
-            title={`${rateLimit.remaining} / ${rateLimit.limit} requests remaining. Resets at ${rateLimit.resetAt.toLocaleTimeString()}`}
-          >
-            <Activity
-              size={16}
-              className={isRateLimitLow ? 'text-orange-500' : 'text-gray-500'}
-            />
-            <span
-              className={`font-mono ${
-                isRateLimitLow
-                  ? 'text-orange-600 dark:text-orange-400'
-                  : 'text-gray-600 dark:text-gray-400'
-              }`}
-            >
-              {rateLimit.remaining}
-            </span>
-          </div>
-
-          {/* Refresh Button */}
-          <button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
-            aria-label="Refresh notifications"
-          >
-            <RefreshCw
-              size={20}
-              className={`text-gray-600 dark:text-gray-400 ${
-                isRefreshing ? 'animate-spin' : ''
-              }`}
-            />
-          </button>
-
-          {/* Theme Toggle */}
-          <ThemeToggle />
-
-          {/* User Avatar */}
-          {user && (
-            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200 dark:border-gray-800">
-              <img
-                src={user.avatar_url}
-                alt={user.name || user.login}
-                className="w-8 h-8 rounded-full"
-              />
-              <div className="hidden md:block text-sm">
-                <div className="font-medium text-gray-900 dark:text-gray-100">
-                  {user.name || user.login}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Logout Button */}
-          <button
-            onClick={logout}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-            aria-label="Logout"
-          >
-            <LogOut size={20} className="text-gray-600 dark:text-gray-400" />
-          </button>
+          <span className="text-white font-semibold text-base">Notifications</span>
         </div>
+      </div>
+
+      {/* Right - Actions */}
+      <div className="flex items-center gap-3">
+        {/* Rate Limit */}
+        <div
+          className="flex items-center gap-1.5 text-xs"
+          title={`${rateLimit.remaining}/${rateLimit.limit} API calls remaining`}
+          style={{ color: isRateLimitLow ? '#f85149' : '#8b949e' }}
+        >
+          <span className="font-mono">{rateLimit.remaining}</span>
+        </div>
+
+        {/* Refresh */}
+        <button
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="p-2 rounded-md hover:bg-[#21262d] transition-colors disabled:opacity-50"
+          aria-label="Refresh notifications"
+          style={{ color: '#8b949e' }}
+        >
+          <RefreshCw size={16} className={isRefreshing ? 'animate-spin' : ''} />
+        </button>
+
+        {/* Notifications Bell */}
+        <button
+          className="p-2 rounded-md hover:bg-[#21262d] transition-colors relative"
+          aria-label="Notifications"
+          style={{ color: '#8b949e' }}
+        >
+          <Bell size={16} />
+        </button>
+
+        {/* User Avatar */}
+        {user && (
+          <button className="flex items-center">
+            <img
+              src={user.avatar_url}
+              alt={user.name || user.login}
+              className="w-8 h-8 rounded-full ring-1 ring-[#30363d]"
+            />
+          </button>
+        )}
+
+        {/* Logout */}
+        <button
+          onClick={logout}
+          className="p-2 rounded-md hover:bg-[#21262d] transition-colors"
+          aria-label="Sign out"
+          style={{ color: '#8b949e' }}
+        >
+          <LogOut size={16} />
+        </button>
       </div>
     </header>
   )
