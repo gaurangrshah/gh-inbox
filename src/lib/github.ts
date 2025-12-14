@@ -220,13 +220,9 @@ export async function githubGet<T>(
     useETag,
   })
 
-  // DEBUG: Log API response details
-  console.log('[DEBUG API] GET', endpoint, '- Status:', response.status)
-
   // Handle 304 Not Modified
   if (response.status === 304) {
     const cached = responseCache.get(url)
-    console.log('[DEBUG API] 304 Not Modified - returning cached data:', Array.isArray(cached) ? `${(cached as unknown[]).length} items` : cached)
     if (cached !== undefined) {
       return cached as T
     }
@@ -235,7 +231,6 @@ export async function githubGet<T>(
   }
 
   const data = (await response.json()) as T
-  console.log('[DEBUG API] Fresh response:', Array.isArray(data) ? `${(data as unknown[]).length} items` : data)
   if (useETag) {
     responseCache.set(url, data as unknown)
   }
