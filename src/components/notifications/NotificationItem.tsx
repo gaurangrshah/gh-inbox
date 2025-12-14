@@ -24,8 +24,10 @@ import type { GitHubNotification } from '../../types/github'
 
 interface NotificationItemProps {
   notification: GitHubNotification
-  isSelected?: boolean
+  isFocused?: boolean
+  isChecked?: boolean
   onClick?: () => void
+  onToggleChecked?: () => void
 }
 
 /**
@@ -98,8 +100,10 @@ function getReasonBadge(reason: string): { bg: string; text: string; label: stri
  */
 export function NotificationItem({
   notification,
-  isSelected = false,
+  isFocused = false,
+  isChecked = false,
   onClick,
+  onToggleChecked,
 }: NotificationItemProps) {
   const typeInfo = getTypeInfo(notification.subject.type, notification.reason)
   const TypeIcon = typeInfo.icon
@@ -112,7 +116,7 @@ export function NotificationItem({
     <div
       onClick={onClick}
       className={`group flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors border-b border-[#21262d] ${
-        isSelected
+        isFocused || isChecked
           ? 'bg-[#161b22]'
           : 'hover:bg-[#161b22]'
       }`}
@@ -124,12 +128,12 @@ export function NotificationItem({
       {/* Checkbox */}
       <input
         type="checkbox"
-        checked={isSelected}
+        checked={isChecked}
         readOnly
         className="w-4 h-4 rounded border-[#30363d] bg-transparent checked:bg-[#58a6ff] focus:ring-0 focus:ring-offset-0"
         onClick={(e) => {
           e.stopPropagation()
-          onClick?.()
+          onToggleChecked?.()
         }}
       />
 
