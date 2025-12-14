@@ -6,7 +6,7 @@
 
 import { useMemo } from 'react'
 import { Search, CheckCheck, MoreHorizontal } from 'lucide-react'
-import { useNotifications, useMarkAllAsRead } from '../hooks/useNotifications'
+import { useNotificationsInfinite, useMarkAllAsRead } from '../hooks/useNotifications'
 import { useFilterStore } from '../stores/filterStore'
 import { NotificationList } from '../components/notifications/NotificationList'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
@@ -49,17 +49,30 @@ function filterNotifications(
  * GitHub-style inbox page
  */
 export default function InboxPage() {
-  const { showUnreadOnly, showParticipating, selectedRepos, selectedReasons } =
-    useFilterStore()
+  const {
+    showUnreadOnly,
+    showParticipating,
+    selectedRepos,
+    selectedReasons,
+    setUnreadOnly,
+  } = useFilterStore()
 
   const {
-    data: notifications = [],
+    data,
     isLoading,
     error,
     refetch,
-  } = useNotifications({
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useNotificationsInfinite({
     participating: showParticipating,
   })
+
+  const notifications = useMemo(
+    () => data?.pages?.flat() ?? [],
+    [data]
+  )
 
   const markAllAsReadMutation = useMarkAllAsRead()
 
@@ -110,19 +123,25 @@ export default function InboxPage() {
       >
         {/* Left side - Select all & Actions */}
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              className="w-4 h-4 rounded border-[#30363d] bg-transparent"
-              aria-label="Select all"
-            />
-            <span className="text-sm text-[#e6edf3]">All</span>
+          {/* View toggle */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setUnreadOnly(false)}
+              className={`text-sm ${
+                !showUnreadOnly ? 'text-[#e6edf3]' : 'text-[#8b949e] hover:text-[#e6edf3]'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setUnreadOnly(true)}
+              className={`text-sm ${
+                showUnreadOnly ? 'text-[#e6edf3]' : 'text-[#8b949e] hover:text-[#e6edf3]'
+              }`}
+            >
+              Unread
+            </button>
           </div>
-
-          {/* Unread filter */}
-          <button className="text-sm text-[#8b949e] hover:text-[#e6edf3] flex items-center gap-1">
-            Unread
-          </button>
         </div>
 
         {/* Center - Search */}
@@ -189,12 +208,30 @@ export default function InboxPage() {
       </div>
 
       {/* Notification List */}
-      <div className="flex-1 overflow-hidden">
-        <NotificationList
-          notifications={filteredNotifications}
-          isLoading={isLoading}
-          onRefresh={() => refetch()}
-        />
+      <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden">
+          <NotificationList
+            notifications={filteredNotifications}
+            isLoading={isLoading}
+            onRefresh={() => refetch()}
+          />
+        </div>
+
+        {hasNextPage && (
+          <div
+            className="px-4 py-3 flex items-center justify-center"
+            style={{ borderTop: '1px solid #21262d' }}
+          >
+            <button
+              onClick={() => fetchNextPage()}
+              disabled={isFetchingNextPage}
+              className="px-3 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50"
+              style={{ borderColor: '#30363d' }}
+            >
+              {isFetchingNextPage ? 'Loading…' : 'Load more'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

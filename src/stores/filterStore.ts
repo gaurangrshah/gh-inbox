@@ -27,6 +27,7 @@ interface FilterState {
   // Actions
   setRepoFilter: (repos: string[]) => void
   setReasonFilter: (reasons: NotificationReason[]) => void
+  setUnreadOnly: (unreadOnly: boolean) => void
   toggleUnreadOnly: () => void
   toggleParticipating: () => void
   setGroupBy: (groupBy: GroupByOption) => void
@@ -51,6 +52,8 @@ export const useFilterStore = create<FilterState>()(
       setRepoFilter: (repos) => set({ selectedRepos: repos }),
 
       setReasonFilter: (reasons) => set({ selectedReasons: reasons }),
+
+      setUnreadOnly: (unreadOnly) => set({ showUnreadOnly: unreadOnly }),
 
       toggleUnreadOnly: () =>
         set((state) => ({ showUnreadOnly: !state.showUnreadOnly })),

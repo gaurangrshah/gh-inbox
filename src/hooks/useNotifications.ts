@@ -8,7 +8,7 @@
  * - Cache invalidation
  */
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { GitHubNotification } from '../types/github'
 import {
   fetchNotifications,
@@ -20,6 +20,8 @@ import {
 } from '../lib/api/notifications'
 import { useAuthStore } from '../stores/authStore'
 import { QUERY_KEYS, POLLING_INTERVAL, STALE_TIME } from '../lib/constants'
+
+const DEFAULT_PER_PAGE = 50
 
 /**
  * Hook for fetching notifications
@@ -39,6 +41,54 @@ export function useNotifications(params: FetchNotificationsParams = {}) {
     enabled: !!token,
     staleTime: STALE_TIME,
     refetchInterval: POLLING_INTERVAL,
+    refetchIntervalInBackground: true,
+  })
+}
+
+/**
+ * Hook for fetching notifications with pagination.
+ *
+ * Uses GitHub Notifications API with:
+ * - all=true (matches GitHub UI "All" view)
+ * - per_page/page pagination
+ *
+ * Note: We only poll when 1 page is loaded to avoid rate-limit blowups.
+ */
+export function useNotificationsInfinite(params: Omit<FetchNotificationsParams, 'page'> = {}) {
+  const token = useAuthStore((state) => state.token)
+  const perPage = params.per_page ?? DEFAULT_PER_PAGE
+
+  // Query key excludes `page` because infinite query controls it via pageParam.
+  const keyParams: FetchNotificationsParams = {
+    ...params,
+    all: true,
+    per_page: perPage,
+  }
+
+  return useInfiniteQuery({
+    queryKey: QUERY_KEYS.notificationsList(keyParams),
+    queryFn: ({ pageParam }) => {
+      if (!token) throw new Error('Not authenticated')
+      const page = typeof pageParam === 'number' ? pageParam : 1
+      return fetchNotifications(token, {
+        ...params,
+        all: true,
+        per_page: perPage,
+        page,
+      })
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) =>
+      lastPage.length === perPage ? allPages.length + 1 : undefined,
+    enabled: !!token,
+    staleTime: STALE_TIME,
+    refetchInterval: (query) => {
+      const data = query.state.data as unknown
+      const pages = Array.isArray((data as { pages?: unknown[] } | null)?.pages)
+        ? (data as { pages: unknown[] }).pages.length
+        : 0
+      return pages <= 1 ? POLLING_INTERVAL : false
+    },
     refetchIntervalInBackground: true,
   })
 }
