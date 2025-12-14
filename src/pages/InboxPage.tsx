@@ -6,7 +6,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Search, CheckCheck, Loader2, AlertCircle, CheckCircle2, X, PanelRightClose, PanelRight, Settings } from 'lucide-react'
+import { Search, CheckCheck, Loader2, AlertCircle, CheckCircle2, X, PanelRightClose, Settings } from 'lucide-react'
 import { useMarkAsRead, useNotificationsInfinite, useMarkAllAsRead, useUnsubscribe } from '../hooks/useNotifications'
 import { useFilterStore } from '../stores/filterStore'
 import { useUIStore } from '../stores/uiStore'
@@ -124,27 +124,11 @@ export default function InboxPage() {
     errors: [],
   })
 
-  // Preview pane state
-  const [showPreview, setShowPreview] = useState(() => {
-    try {
-      return localStorage.getItem('showPreview') !== '0'
-    } catch {
-      return true
-    }
-  })
+  // Preview pane state - only show when a notification is selected
   const [previewNotification, setPreviewNotification] = useState<GitHubNotification | null>(null)
 
   const markAsReadMutation = useMarkAsRead()
   const unsubscribeMutation = useUnsubscribe()
-
-  // Persist preview preference
-  useEffect(() => {
-    try {
-      localStorage.setItem('showPreview', showPreview ? '1' : '0')
-    } catch {
-      // ignore
-    }
-  }, [showPreview])
 
   /** Add a toast notification */
   const addToast = useCallback((type: Toast['type'], message: string) => {
@@ -217,9 +201,9 @@ export default function InboxPage() {
       },
       {
         key: 'p',
-        description: 'Toggle preview pane',
+        description: 'Close preview pane',
         handler: () => {
-          setShowPreview((prev) => !prev)
+          setPreviewNotification(null)
         },
       },
     ],
@@ -642,18 +626,16 @@ export default function InboxPage() {
             </button>
           )}
 
-          <button
-            onClick={() => setShowPreview(!showPreview)}
-            className={`p-1.5 rounded-md hover:bg-[#21262d] ${showPreview ? 'bg-[#21262d]' : ''}`}
-            aria-label={showPreview ? 'Hide preview pane' : 'Show preview pane'}
-            title={showPreview ? 'Hide preview (p)' : 'Show preview (p)'}
-          >
-            {showPreview ? (
+          {previewNotification && (
+            <button
+              onClick={() => setPreviewNotification(null)}
+              className="p-1.5 rounded-md hover:bg-[#21262d] bg-[#21262d]"
+              aria-label="Close preview pane"
+              title="Close preview (p)"
+            >
               <PanelRightClose size={16} className="text-[#8b949e]" />
-            ) : (
-              <PanelRight size={16} className="text-[#8b949e]" />
-            )}
-          </button>
+            </button>
+          )}
 
           <button
             onClick={openSettingsPanel}
@@ -689,7 +671,7 @@ export default function InboxPage() {
       {/* Main content area with list and optional preview */}
       <div className="flex-1 overflow-hidden flex">
         {/* Notification List */}
-        <div className={`flex-1 overflow-hidden flex flex-col ${showPreview ? 'max-w-[60%]' : ''}`}>
+        <div className={`flex-1 overflow-hidden flex flex-col ${previewNotification ? 'max-w-[60%]' : ''}`}>
           <div className="flex-1 overflow-hidden">
             <NotificationList
               notifications={filteredNotifications}
@@ -706,9 +688,10 @@ export default function InboxPage() {
                 }
               }}
               onSelectNotification={(notification) => {
-                if (showPreview) {
-                  setPreviewNotification(notification)
-                }
+                // Toggle: clicking same notification closes preview, clicking different opens it
+                setPreviewNotification((prev) =>
+                  prev?.id === notification.id ? null : notification
+                )
               }}
               selectedNotificationId={previewNotification?.id}
             />
@@ -731,8 +714,8 @@ export default function InboxPage() {
           )}
         </div>
 
-        {/* Preview Pane */}
-        {showPreview && (
+        {/* Preview Pane - only shown when a notification is selected */}
+        {previewNotification && (
           <div className="w-[40%] min-w-[300px] max-w-[500px]">
             <NotificationPreview
               notification={previewNotification}

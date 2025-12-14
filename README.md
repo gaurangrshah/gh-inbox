@@ -107,7 +107,7 @@ See [docs/architecture.md](./docs/architecture.md) for detailed technical archit
 | `a` | Select all visible |
 | `e` | Mark selected as read (bulk) |
 | `u` | Unsubscribe from selected (bulk) |
-| `p` | Toggle preview pane |
+| `p` | Close preview pane |
 | `Escape` | Clear selection / blur search |
 
 ## Accessibility
