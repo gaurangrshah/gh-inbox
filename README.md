@@ -98,12 +98,16 @@ See [docs/architecture.md](./docs/architecture.md) for detailed technical archit
 
 | Key | Action |
 |-----|--------|
+| `/` | Focus search |
 | `j` | Next notification |
 | `k` | Previous notification |
-| `x` | Mark as read |
+| `x` | Mark current as read |
 | `o` | Open in GitHub |
 | `r` | Refresh |
-| `Escape` | Clear selection |
+| `a` | Select all visible |
+| `e` | Mark selected as read (bulk) |
+| `u` | Unsubscribe from selected (bulk) |
+| `Escape` | Clear selection / blur search |
 
 ## Accessibility
 
