@@ -253,15 +253,23 @@ Click the gear icon to configure:
 - **P1 - Actions**: Bulk selection, mark read, unsubscribe, keyboard shortcuts
 - **P2 - UX**: Preview pane, settings panel, polished states
 - **Tauri Phase 1**: Desktop shell, keychain storage, system tray
+- **v0.1.1 Enhancements**:
+  - Shift-click range selection for notification checkboxes
+  - Auto-load (infinite scroll) enabled by default
+  - All-notifications view with pagination UI
+  - Fixed CSP/IPC permissions for Tauri v2
+  - Fixed 304 polling and checkbox selection bugs
 
 ### In Progress 🚧
 
 - **Tauri Phase 2**: Native notifications, global shortcuts, auto-launch
+- **API Parity**: Aggregate Dependabot alerts and security advisories (GitHub `/notifications` API doesn't include these)
 
 ### Planned 📋
 
 - **Tauri Phase 3**: Offline mode with SQLite, background sync
 - **Inbox Zero**: Done/Archive states, saved filters
+- **Full GitHub Parity**: Include all notification types shown on github.com (requires multiple API endpoints)
 
 ## Accessibility
 
