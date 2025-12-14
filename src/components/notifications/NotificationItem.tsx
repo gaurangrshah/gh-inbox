@@ -28,7 +28,7 @@ interface NotificationItemProps {
   isChecked?: boolean
   isSelected?: boolean
   onClick?: () => void
-  onToggleChecked?: () => void
+  onToggleChecked?: (event: React.MouseEvent) => void
 }
 
 /**
@@ -137,7 +137,7 @@ export function NotificationItem({
         className="w-4 h-4 rounded border-[#30363d] bg-transparent checked:bg-[#58a6ff] focus:ring-0 focus:ring-offset-0"
         onClick={(e) => {
           e.stopPropagation()
-          onToggleChecked?.()
+          onToggleChecked?.(e)
         }}
       />
 

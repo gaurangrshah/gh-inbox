@@ -20,7 +20,7 @@ interface NotificationListProps {
   isLoading?: boolean
   onRefresh: () => void
   selectedIds: Set<string>
-  onToggleSelected: (threadId: string) => void
+  onToggleSelected: (threadId: string, index: number, shiftKey: boolean) => void
   autoLoadMore?: boolean
   hasNextPage?: boolean
   isFetchingNextPage?: boolean
@@ -191,7 +191,7 @@ export function NotificationList({
                     )
                     onSelectNotification?.(notification)
                   }}
-                  onToggleChecked={() => onToggleSelected(notification.id)}
+                  onToggleChecked={(e) => onToggleSelected(notification.id, virtualRow.index, e.shiftKey)}
                 />
 
                 {/* Action buttons overlay */}

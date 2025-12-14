@@ -15,7 +15,6 @@ import { NotificationPreview } from '../components/notifications/NotificationPre
 import { SettingsPanel } from '../components/settings/SettingsPanel'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
-import { Pagination } from '../components/ui/Pagination'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { openInNewTab, apiUrlToWebUrl } from '../lib/utils/url'
 import type { GitHubNotification } from '../types/github'
@@ -105,6 +104,7 @@ export default function InboxPage() {
   const searchInputRef = useRef<HTMLInputElement | null>(null)
   const selectAllRef = useRef<HTMLInputElement | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
+  const lastSelectedIndexRef = useRef<number | null>(null) // Track last clicked index for shift-select
   const [autoLoadMore, setAutoLoadMore] = useState(() => {
     try {
       const stored = localStorage.getItem('autoLoadMore')
@@ -321,13 +321,36 @@ export default function InboxPage() {
     }
   }, [someVisibleSelected])
 
-  const toggleSelected = (threadId: string) => {
+  const toggleSelected = (threadId: string, index: number, shiftKey: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev)
-      if (next.has(threadId)) next.delete(threadId)
-      else next.add(threadId)
+
+      // Shift-click range selection
+      if (shiftKey && lastSelectedIndexRef.current !== null) {
+        const start = Math.min(lastSelectedIndexRef.current, index)
+        const end = Math.max(lastSelectedIndexRef.current, index)
+
+        // Select all notifications in the range
+        for (let i = start; i <= end; i++) {
+          const notification = filteredNotifications[i]
+          if (notification) {
+            next.add(notification.id)
+          }
+        }
+      } else {
+        // Normal toggle
+        if (next.has(threadId)) {
+          next.delete(threadId)
+        } else {
+          next.add(threadId)
+        }
+      }
+
       return next
     })
+
+    // Update last selected index for future shift-clicks
+    lastSelectedIndexRef.current = index
   }
 
   const toggleSelectAllVisible = () => {
