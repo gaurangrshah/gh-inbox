@@ -1,11 +1,12 @@
 /**
  * Inbox Page - GitHub Style
  *
- * Main notification management interface
+ * Main notification management interface with bulk actions,
+ * keyboard shortcuts, and error handling.
  */
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Search, CheckCheck, MoreHorizontal } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Search, CheckCheck, MoreHorizontal, Loader2, AlertCircle, CheckCircle2, X } from 'lucide-react'
 import { useMarkAsRead, useNotificationsInfinite, useMarkAllAsRead, useUnsubscribe } from '../hooks/useNotifications'
 import { useFilterStore } from '../stores/filterStore'
 import { NotificationList } from '../components/notifications/NotificationList'
@@ -13,6 +14,22 @@ import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import type { GitHubNotification } from '../types/github'
+
+/** Toast notification state */
+interface Toast {
+  id: string
+  type: 'success' | 'error' | 'info'
+  message: string
+}
+
+/** Bulk action progress state */
+interface BulkActionState {
+  isRunning: boolean
+  action: 'mark-read' | 'unsubscribe' | null
+  total: number
+  completed: number
+  errors: string[]
+}
 
 /**
  * Filter notifications based on current filter settings
@@ -85,9 +102,45 @@ export default function InboxPage() {
     }
   })
 
+  // Toast notifications for user feedback
+  const [toasts, setToasts] = useState<Toast[]>([])
+
+  // Bulk action progress tracking
+  const [bulkState, setBulkState] = useState<BulkActionState>({
+    isRunning: false,
+    action: null,
+    total: 0,
+    completed: 0,
+    errors: [],
+  })
+
   const markAsReadMutation = useMarkAsRead()
   const unsubscribeMutation = useUnsubscribe()
 
+  /** Add a toast notification */
+  const addToast = useCallback((type: Toast['type'], message: string) => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+    setToasts((prev) => [...prev, { id, type, message }])
+    // Auto-dismiss after 4 seconds
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id))
+    }, 4000)
+  }, [])
+
+  /** Dismiss a toast */
+  const dismissToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id))
+  }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('autoLoadMore', autoLoadMore ? '1' : '0')
+    } catch {
+      // ignore
+    }
+  }, [autoLoadMore])
+
+  // Keyboard shortcuts for bulk actions and navigation
   useKeyboardShortcuts({
     shortcuts: [
       {
@@ -97,16 +150,44 @@ export default function InboxPage() {
           searchInputRef.current?.focus()
         },
       },
+      {
+        key: 'a',
+        description: 'Select all visible',
+        handler: () => {
+          if (filteredNotifications.length > 0) {
+            setSelectedIds(new Set(filteredNotifications.map((n) => n.id)))
+          }
+        },
+      },
+      {
+        key: 'Escape',
+        description: 'Clear selection',
+        handler: () => {
+          if (selectedIds.size > 0) {
+            clearSelection()
+          }
+        },
+      },
+      {
+        key: 'e',
+        description: 'Mark selected as read',
+        handler: () => {
+          if (selectedIds.size > 0 && !bulkState.isRunning) {
+            void bulkMarkAsRead()
+          }
+        },
+      },
+      {
+        key: 'u',
+        description: 'Unsubscribe from selected',
+        handler: () => {
+          if (selectedIds.size > 0 && !bulkState.isRunning) {
+            void bulkUnsubscribe()
+          }
+        },
+      },
     ],
   })
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('autoLoadMore', autoLoadMore ? '1' : '0')
-    } catch {
-      // ignore
-    }
-  }, [autoLoadMore])
 
   const {
     data,
@@ -222,25 +303,123 @@ export default function InboxPage() {
 
   const clearSelection = () => setSelectedIds(new Set())
 
+  /**
+   * Parse GitHub API error for user-friendly message
+   */
+  const parseError = (err: unknown): string => {
+    if (err instanceof Error) {
+      const msg = err.message.toLowerCase()
+      if (msg.includes('rate limit') || msg.includes('403')) {
+        return 'Rate limit exceeded. Please wait a moment.'
+      }
+      if (msg.includes('401') || msg.includes('unauthorized')) {
+        return 'Authentication failed. Please check your token.'
+      }
+      if (msg.includes('404') || msg.includes('not found')) {
+        return 'Notification not found (may have been deleted).'
+      }
+      return err.message
+    }
+    return 'An unexpected error occurred'
+  }
+
+  /**
+   * Bulk mark as read with progress tracking
+   */
   const bulkMarkAsRead = async () => {
     const ids = Array.from(selectedIds)
     if (ids.length === 0) return
+    if (bulkState.isRunning) return
+
+    setBulkState({
+      isRunning: true,
+      action: 'mark-read',
+      total: ids.length,
+      completed: 0,
+      errors: [],
+    })
+
+    const errors: string[] = []
+    let completed = 0
 
     for (const id of ids) {
-      await markAsReadMutation.mutateAsync(id)
+      try {
+        await markAsReadMutation.mutateAsync(id)
+      } catch (err) {
+        errors.push(parseError(err))
+      }
+      completed++
+      setBulkState((prev) => ({ ...prev, completed, errors }))
     }
+
+    setBulkState({
+      isRunning: false,
+      action: null,
+      total: 0,
+      completed: 0,
+      errors: [],
+    })
+
     clearSelection()
+
+    // Show result toast
+    if (errors.length === 0) {
+      addToast('success', `Marked ${ids.length} notification${ids.length === 1 ? '' : 's'} as read`)
+    } else if (errors.length < ids.length) {
+      addToast('info', `Marked ${ids.length - errors.length} as read, ${errors.length} failed`)
+    } else {
+      addToast('error', errors[0] || 'Failed to mark notifications as read')
+    }
   }
 
+  /**
+   * Bulk unsubscribe with progress tracking
+   */
   const bulkUnsubscribe = async () => {
     const ids = Array.from(selectedIds)
     if (ids.length === 0) return
+    if (bulkState.isRunning) return
     if (!confirm(`Unsubscribe from ${ids.length} thread${ids.length === 1 ? '' : 's'}?`)) return
 
+    setBulkState({
+      isRunning: true,
+      action: 'unsubscribe',
+      total: ids.length,
+      completed: 0,
+      errors: [],
+    })
+
+    const errors: string[] = []
+    let completed = 0
+
     for (const id of ids) {
-      await unsubscribeMutation.mutateAsync(id)
+      try {
+        await unsubscribeMutation.mutateAsync(id)
+      } catch (err) {
+        errors.push(parseError(err))
+      }
+      completed++
+      setBulkState((prev) => ({ ...prev, completed, errors }))
     }
+
+    setBulkState({
+      isRunning: false,
+      action: null,
+      total: 0,
+      completed: 0,
+      errors: [],
+    })
+
     clearSelection()
+
+    // Show result toast
+    if (errors.length === 0) {
+      addToast('success', `Unsubscribed from ${ids.length} thread${ids.length === 1 ? '' : 's'}`)
+    } else if (errors.length < ids.length) {
+      addToast('info', `Unsubscribed from ${ids.length - errors.length}, ${errors.length} failed`)
+    } else {
+      addToast('error', errors[0] || 'Failed to unsubscribe')
+    }
   }
 
   const handleMarkAllAsRead = () => {
@@ -316,24 +495,42 @@ export default function InboxPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => void bulkMarkAsRead()}
-                disabled={markAsReadMutation.isPending}
-                className="px-2.5 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50"
+                disabled={bulkState.isRunning}
+                className="px-2.5 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50 flex items-center gap-1.5"
                 style={{ borderColor: '#30363d' }}
+                title="Keyboard: e"
               >
-                Mark read
+                {bulkState.isRunning && bulkState.action === 'mark-read' ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    {bulkState.completed}/{bulkState.total}
+                  </>
+                ) : (
+                  'Mark read'
+                )}
               </button>
               <button
                 onClick={() => void bulkUnsubscribe()}
-                disabled={unsubscribeMutation.isPending}
-                className="px-2.5 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50"
+                disabled={bulkState.isRunning}
+                className="px-2.5 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50 flex items-center gap-1.5"
                 style={{ borderColor: '#30363d' }}
+                title="Keyboard: u"
               >
-                Unsubscribe
+                {bulkState.isRunning && bulkState.action === 'unsubscribe' ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    {bulkState.completed}/{bulkState.total}
+                  </>
+                ) : (
+                  'Unsubscribe'
+                )}
               </button>
               <button
                 onClick={clearSelection}
-                className="px-2.5 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d]"
+                disabled={bulkState.isRunning}
+                className="px-2.5 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50"
                 style={{ borderColor: '#30363d' }}
+                title="Keyboard: Escape"
               >
                 Clear
               </button>
@@ -463,6 +660,37 @@ export default function InboxPage() {
           </div>
         )}
       </div>
+
+      {/* Toast notifications */}
+      {toasts.length > 0 && (
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+          {toasts.map((toast) => (
+            <div
+              key={toast.id}
+              className={`flex items-center gap-2 px-4 py-3 rounded-md shadow-lg text-sm max-w-sm animate-in slide-in-from-right ${
+                toast.type === 'success'
+                  ? 'bg-[#238636] text-white'
+                  : toast.type === 'error'
+                  ? 'bg-[#da3633] text-white'
+                  : 'bg-[#1f6feb] text-white'
+              }`}
+              role="alert"
+            >
+              {toast.type === 'success' && <CheckCircle2 size={16} />}
+              {toast.type === 'error' && <AlertCircle size={16} />}
+              {toast.type === 'info' && <AlertCircle size={16} />}
+              <span className="flex-1">{toast.message}</span>
+              <button
+                onClick={() => dismissToast(toast.id)}
+                className="p-0.5 rounded hover:bg-white/20"
+                aria-label="Dismiss"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

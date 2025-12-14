@@ -1,0 +1,46 @@
+{
+  "projectName": "github-inbox",
+  "checkpoints": ["parse", "execute", "complete"],
+  "syncTodoWrite": true,
+  "workflow": {
+    "type": "feature-branch",
+    "branchPrefix": {
+      "feature": "feat/",
+      "fix": "fix/",
+      "refactor": "refactor/",
+      "docs": "docs/",
+      "chore": "chore/"
+    },
+    "mainBranch": "main",
+    "commitStyle": "atomic",
+    "commitConvention": "conventional",
+    "requireBranchPerMilestone": true,
+    "prBeforeMerge": true
+  },
+  "milestones": [
+    {
+      "id": "p0",
+      "name": "P0 - Parity Core",
+      "branch": "feat/p0-parity-core",
+      "description": "Shows what GitHub shows - search, pagination, sidebar"
+    },
+    {
+      "id": "p1",
+      "name": "P1 - Parity Actions",
+      "branch": "feat/p1-parity-actions",
+      "description": "Can do what GitHub can do - bulk selection, actions"
+    },
+    {
+      "id": "p2",
+      "name": "P2 - Parity UX",
+      "branch": "feat/p2-parity-ux",
+      "description": "Feels like GitHub - preview pane, polish"
+    },
+    {
+      "id": "future-tauri",
+      "name": "Tauri Desktop App",
+      "branch": "feat/tauri-desktop",
+      "description": "Native desktop app with system tray and offline support"
+    }
+  ]
+}
