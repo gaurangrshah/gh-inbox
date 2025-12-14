@@ -119,18 +119,62 @@ WCAG 2.1 AA compliant:
 
 ## Roadmap
 
-### Planned Features
+This roadmap aims for **GitHub Notifications parity** first (match native behavior), then explores "Inbox Zero" and **Tauri desktop app** as future enhancements.
 
-- [ ] **Saved Notifications** - Save notifications for later review (Sidebar "Saved" tab)
-- [ ] **Done Notifications** - Archive completed notifications (Sidebar "Done" tab)
-- [ ] **Repository Filtering** - Filter notifications by repository in sidebar
-- [ ] **Light Theme** - Optional light mode theme
-- [ ] **Notification Grouping** - Group notifications by repository
+### P0 — Parity Core ✅ ("shows what GitHub shows")
 
-### Technical Improvements
+- [x] **Working search**: search box filters by repo/title/reason/type; `/` focuses search; `Esc` clears
+- [x] **All view + pagination**: "All" includes read + unread; paging loads additional pages
+- [x] **Repo list from notifications**: sidebar repository list derived from loaded notifications with counts
+- [x] **Auto-load on scroll**: optional toggle (persisted) to auto-load next page near bottom
+- [x] **Filter chips**: unread/total counts per repository in sidebar
 
-- [ ] **Enhanced Test Coverage** - Add integration tests and E2E tests
-- [ ] **CI/CD Pipeline** - GitHub Actions for automated testing and deployment
+### P1 — Parity Actions ("can do what GitHub can do")
+
+- [x] **Bulk selection**: row checkboxes + select-all checkbox
+- [x] **Bulk actions**: mark read / unsubscribe for selected items
+- [ ] **Better action UX**: clearer loading states + error messaging for rate limit/permissions
+- [ ] **Keyboard shortcuts for bulk actions**
+
+### P2 — Parity UX ("feels like GitHub")
+
+- [ ] **Preview pane**: optional right-side preview for the selected notification
+- [ ] **Settings panel**: configure per_page, polling interval, auto-load default
+- [ ] **Better empty/error/loading states**
+
+### Future — Inbox Zero Workflow (optional)
+
+- [ ] **Done/Archive state** separate from read/unread
+- [ ] **Saved/Starred** with quick filters
+- [ ] **Auto-restore archived** threads on new activity (Octobox-style)
+- Requires local persistence (IndexedDB/localStorage) and reconciliation
+
+### Future — OAuth + Backend Mode (optional)
+
+For local PAT usage, the app is intentionally frontend-only. A secure OAuth flow requires a backend for code exchange (never ship `client_secret` in the frontend bundle).
+
+### Future — Tauri Desktop App
+
+Native desktop application with enhanced capabilities:
+
+**Phase 1 - Tauri Shell**
+- [ ] Initialize Tauri project wrapping existing React app
+- [ ] Configure builds for macOS, Windows, Linux
+- [ ] Secure PAT storage using OS keychain (not localStorage)
+- [ ] System tray icon with notification badge
+
+**Phase 2 - Native Features**
+- [ ] Native OS notifications for new GitHub notifications
+- [ ] Global keyboard shortcuts (configurable)
+- [ ] Auto-launch on system startup
+- [ ] Menu bar integration (macOS)
+
+**Phase 3 - Offline & Sync**
+- [ ] SQLite local database for offline access
+- [ ] Background sync when online
+- [ ] Conflict resolution for offline actions
+
+**Benefits**: Secure token storage, native notifications, system tray presence, faster startup, works offline.
 
 ## Contributing
 
