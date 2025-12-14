@@ -13,7 +13,12 @@ const GITHUB_REDIRECT_URI = import.meta.env.VITE_GITHUB_REDIRECT_URI || `${windo
 
 export interface UseAuthReturn {
   token: string | null
-  user: ReturnType<typeof useAuthStore>['user']
+  user: {
+    login: string
+    name: string | null
+    avatar_url: string
+    email: string | null
+  } | null
   isAuthenticated: boolean
   login: () => void
   logout: () => void

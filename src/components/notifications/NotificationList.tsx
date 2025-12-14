@@ -47,7 +47,7 @@ export function NotificationList({
   })
 
   // Keyboard navigation
-  const shortcuts = useNotificationKeyboardNav({
+  useNotificationKeyboardNav({
     selectedIndex,
     setSelectedIndex,
     notifications,
