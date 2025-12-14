@@ -13,11 +13,19 @@ import { useMarkAsRead, useUnsubscribe } from '../../hooks/useNotifications'
 import { useNotificationKeyboardNav } from '../../hooks/useKeyboardShortcuts'
 import { LoadingSpinner } from '../ui/LoadingSpinner'
 import { EmptyState } from '../ui/EmptyState'
+import { apiUrlToWebUrl, openInNewTab } from '../../lib/utils/url'
 
 interface NotificationListProps {
   notifications: GitHubNotification[]
   isLoading?: boolean
   onRefresh: () => void
+}
+
+/**
+ * Get the web URL for a notification
+ */
+function getNotificationUrl(notification: GitHubNotification): string {
+  return apiUrlToWebUrl(notification.subject.url, notification.repository.html_url)
 }
 
 /**
@@ -60,16 +68,7 @@ export function NotificationList({
     onOpen: (index) => {
       const notification = notifications[index]
       if (notification) {
-        // Extract URL from subject.url (GitHub API format)
-        // Convert API URL to web URL
-        const htmlUrl = notification.subject.url
-          ? notification.subject.url
-              .replace('api.github.com/repos', 'github.com')
-              .replace('/pulls/', '/pull/')
-              .replace('/issues/', '/issues/')
-          : notification.repository.html_url
-
-        window.open(htmlUrl, '_blank', 'noopener,noreferrer')
+        openInNewTab(getNotificationUrl(notification))
       }
     },
     onRefresh,
@@ -80,14 +79,7 @@ export function NotificationList({
   }
 
   const handleOpen = (notification: GitHubNotification) => {
-    const htmlUrl = notification.subject.url
-      ? notification.subject.url
-          .replace('api.github.com/repos', 'github.com')
-          .replace('/pulls/', '/pull/')
-          .replace('/issues/', '/issues/')
-      : notification.repository.html_url
-
-    window.open(htmlUrl, '_blank', 'noopener,noreferrer')
+    openInNewTab(getNotificationUrl(notification))
   }
 
   const handleUnsubscribe = (notification: GitHubNotification) => {

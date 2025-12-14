@@ -1,20 +1,19 @@
 /**
  * Root application component
  *
- * Sets up routing, authentication, and application layout
+ * Sets up routing, authentication, and application layout.
+ * Uses PAT-only authentication (OAuth removed for security).
  */
 
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useEffect } from 'react'
 import InboxPage from './pages/InboxPage'
 import LoginPage from './pages/LoginPage'
-import CallbackPage from './pages/CallbackPage'
 import SettingsPage from './pages/SettingsPage'
 import NotFoundPage from './pages/NotFoundPage'
 import { Layout } from './components/layout/Layout'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { useAuthStore } from './stores/authStore'
-import { useUIStore } from './stores/uiStore'
 
 // Create QueryClient instance
 const queryClient = new QueryClient({
@@ -43,44 +42,38 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
  * Root application component
  */
 function App() {
-  const { theme, setTheme } = useUIStore()
-
-  // Apply theme on mount
-  useEffect(() => {
-    setTheme(theme)
-  }, [theme, setTheme])
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/callback" element={<CallbackPage />} />
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<LoginPage />} />
 
-          {/* Protected routes */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <InboxPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <SettingsPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Protected routes */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <InboxPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* 404 handler */}
-          <Route path="*" element={<NotFoundPage />} />
-        </Routes>
-      </BrowserRouter>
-    </QueryClientProvider>
+            {/* 404 handler */}
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </ErrorBoundary>
   )
 }
 

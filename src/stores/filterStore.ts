@@ -5,19 +5,10 @@
 
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import type { NotificationReason } from '../types/github'
 
-export type NotificationReason =
-  | 'assign'
-  | 'author'
-  | 'comment'
-  | 'invitation'
-  | 'manual'
-  | 'mention'
-  | 'review_requested'
-  | 'security_alert'
-  | 'state_change'
-  | 'subscribed'
-  | 'team_mention'
+// Re-export for backward compatibility
+export type { NotificationReason } from '../types/github'
 
 export type GroupByOption = 'none' | 'repo' | 'date' | 'reason'
 export type SortOrder = 'newest' | 'oldest' | 'updated'

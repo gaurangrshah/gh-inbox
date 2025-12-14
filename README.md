@@ -8,7 +8,7 @@ A modern, efficient GitHub notifications manager with real-time sync, keyboard s
 - **Keyboard Navigation** - vim-style shortcuts (j/k/x/o/r/Escape)
 - **Advanced Filtering** - Filter by repository, reason, type, and status
 - **Rate Limit Tracking** - Visual indicator with automatic retry
-- **Dark Mode** - Beautiful dark theme by default with light mode option
+- **Dark Theme** - GitHub Primer design system dark theme
 - **Virtualized Lists** - Smooth performance with @tanstack/react-virtual
 - **Optimistic Updates** - Instant UI feedback with rollback on error
 - **Inbox Zero Workflow** - Mark as read, unsubscribe, bulk operations
@@ -72,19 +72,15 @@ pnpm preview
 
 The application runs at `http://localhost:5173` by default.
 
-### GitHub OAuth Setup
+### GitHub Authentication
 
-1. Go to https://github.com/settings/developers
-2. Click "New OAuth App"
-3. Fill in:
-   - **Application name**: GitHub Inbox (Dev)
-   - **Homepage URL**: http://localhost:5173
-   - **Authorization callback URL**: http://localhost:5173/callback
-4. Copy Client ID and Client Secret to `.env`
+This app uses Personal Access Token (PAT) authentication.
 
-**Alternative**: Use a Personal Access Token
-- Create at https://github.com/settings/tokens/new
-- Required scopes: `notifications`, `repo`, `read:user`
+1. Create a PAT at https://github.com/settings/tokens/new
+2. Required scopes: `notifications`, `repo`, `read:user`
+3. Enter the token on the login page
+
+**Security Note**: Your token is stored in browser localStorage and never sent to any server other than GitHub's API.
 
 ## Architecture
 
@@ -121,9 +117,20 @@ WCAG 2.1 AA compliant:
 - Keyboard navigation support
 - Reduced motion support
 
-## TODO
+## Roadmap
 
-- [ ] **Backend Proxy**: Implement backend proxy for OAuth token exchange to avoid exposing client secret in frontend bundle
+### Planned Features
+
+- [ ] **Saved Notifications** - Save notifications for later review (Sidebar "Saved" tab)
+- [ ] **Done Notifications** - Archive completed notifications (Sidebar "Done" tab)
+- [ ] **Repository Filtering** - Filter notifications by repository in sidebar
+- [ ] **Light Theme** - Optional light mode theme
+- [ ] **Notification Grouping** - Group notifications by repository
+
+### Technical Improvements
+
+- [ ] **Enhanced Test Coverage** - Add integration tests and E2E tests
+- [ ] **CI/CD Pipeline** - GitHub Actions for automated testing and deployment
 
 ## Contributing
 

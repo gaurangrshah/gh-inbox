@@ -3,8 +3,36 @@
  * Based on GitHub REST API v3 response shapes
  */
 
-import type { NotificationReason } from '../stores/filterStore'
+/**
+ * Possible reasons for receiving a notification
+ */
+export type NotificationReason =
+  | 'assign'
+  | 'author'
+  | 'comment'
+  | 'invitation'
+  | 'manual'
+  | 'mention'
+  | 'review_requested'
+  | 'security_alert'
+  | 'state_change'
+  | 'subscribed'
+  | 'team_mention'
 
+/**
+ * Notification subject types
+ */
+export type NotificationSubjectType =
+  | 'Issue'
+  | 'PullRequest'
+  | 'Commit'
+  | 'Release'
+  | 'Discussion'
+  | 'RepositoryVulnerabilityAlert'
+
+/**
+ * GitHub notification object
+ */
 export interface GitHubNotification {
   id: string
   unread: boolean
@@ -15,7 +43,7 @@ export interface GitHubNotification {
     title: string
     url: string
     latest_comment_url: string
-    type: 'Issue' | 'PullRequest' | 'Commit' | 'Release' | 'Discussion'
+    type: NotificationSubjectType
   }
   repository: {
     id: number
@@ -36,6 +64,9 @@ export interface GitHubNotification {
   subscription_url: string
 }
 
+/**
+ * GitHub repository object
+ */
 export interface GitHubRepository {
   id: number
   name: string
@@ -49,6 +80,9 @@ export interface GitHubRepository {
   description: string | null
 }
 
+/**
+ * GitHub user object
+ */
 export interface GitHubUser {
   login: string
   id: number
@@ -61,6 +95,9 @@ export interface GitHubUser {
   following: number
 }
 
+/**
+ * Rate limit information from GitHub API headers
+ */
 export interface RateLimitInfo {
   remaining: number
   limit: number
