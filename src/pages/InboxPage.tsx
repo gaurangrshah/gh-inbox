@@ -479,7 +479,7 @@ export default function InboxPage() {
   }
 
   return (
-    <div className="h-full flex flex-col" style={{ backgroundColor: '#0d1117' }}>
+    <div className="h-full flex flex-col min-h-0" style={{ backgroundColor: '#0d1117' }}>
       {/* GitHub-style Toolbar */}
       <div
         className="px-4 py-3 flex items-center justify-between"
@@ -669,10 +669,10 @@ export default function InboxPage() {
       </div>
 
       {/* Main content area with list and optional preview */}
-      <div className="flex-1 overflow-hidden flex">
+      <div className="flex-1 overflow-hidden flex min-h-0">
         {/* Notification List */}
-        <div className={`flex-1 overflow-hidden flex flex-col ${previewNotification ? 'max-w-[60%]' : ''}`}>
-          <div className="flex-1 overflow-hidden">
+        <div className={`flex-1 overflow-hidden flex flex-col min-h-0 ${previewNotification ? 'max-w-[60%]' : ''}`}>
+          <div className="flex-1 overflow-hidden min-h-0">
             <NotificationList
               notifications={filteredNotifications}
               isLoading={isLoading}
