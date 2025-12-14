@@ -310,6 +310,15 @@ export default function InboxPage() {
     })
   }, [filteredNotifications])
 
+  // Clear preview notification when it's no longer in the filtered list
+  useEffect(() => {
+    if (!previewNotification) return
+    const stillVisible = filteredNotifications.some((n) => n.id === previewNotification.id)
+    if (!stillVisible) {
+      setPreviewNotification(null)
+    }
+  }, [filteredNotifications, previewNotification])
+
   const allVisibleSelected =
     filteredNotifications.length > 0 &&
     filteredNotifications.every((n) => selectedIds.has(n.id))
