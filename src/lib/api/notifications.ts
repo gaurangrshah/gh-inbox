@@ -5,7 +5,7 @@
  */
 
 import type { GitHubNotification, GitHubUser } from '../../types/github'
-import { githubGet, githubPatch, githubPut, githubDelete } from '../github'
+import { githubGet, githubPatch, githubPut, githubDelete, clearCache } from '../github'
 
 export interface FetchNotificationsParams {
   all?: boolean
@@ -53,6 +53,8 @@ export async function markNotificationAsRead(
   threadId: string
 ): Promise<void> {
   await githubPatch(`/notifications/threads/${threadId}`, token)
+  // Clear notification cache to force fresh fetch after mutation
+  clearCache('/notifications')
 }
 
 /**
@@ -67,6 +69,8 @@ export async function markAllNotificationsAsRead(
 ): Promise<void> {
   const body = lastReadAt ? { last_read_at: lastReadAt } : {}
   await githubPut('/notifications', token, body)
+  // Clear notification cache to force fresh fetch after mutation
+  clearCache('/notifications')
 }
 
 /**
@@ -85,6 +89,8 @@ export async function markRepositoryNotificationsAsRead(
 ): Promise<void> {
   const body = lastReadAt ? { last_read_at: lastReadAt } : {}
   await githubPut(`/repos/${owner}/${repo}/notifications`, token, body)
+  // Clear notification cache to force fresh fetch after mutation
+  clearCache('/notifications')
 }
 
 /**
@@ -98,6 +104,8 @@ export async function unsubscribeFromThread(
   threadId: string
 ): Promise<void> {
   await githubDelete(`/notifications/threads/${threadId}/subscription`, token)
+  // Clear notification cache to force fresh fetch after mutation
+  clearCache('/notifications')
 }
 
 /**

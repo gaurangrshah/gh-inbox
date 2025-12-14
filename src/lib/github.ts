@@ -45,6 +45,27 @@ export function getRateLimitInfo(): RateLimitInfo {
 }
 
 /**
+ * Clear cached ETag and response data for a given URL pattern
+ * Call this after mutations that change data to force fresh fetches
+ */
+export function clearCache(urlPattern?: string): void {
+  if (urlPattern) {
+    // Clear matching entries
+    const fullUrl = `${API_BASE_URL}${urlPattern}`
+    for (const key of etagCache.keys()) {
+      if (key.startsWith(fullUrl)) {
+        etagCache.delete(key)
+        responseCache.delete(key)
+      }
+    }
+  } else {
+    // Clear all cache
+    etagCache.clear()
+    responseCache.clear()
+  }
+}
+
+/**
  * Update rate limit info from response headers
  */
 function updateRateLimitFromHeaders(headers: Headers): void {
