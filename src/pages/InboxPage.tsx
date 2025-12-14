@@ -15,6 +15,7 @@ import { NotificationPreview } from '../components/notifications/NotificationPre
 import { SettingsPanel } from '../components/settings/SettingsPanel'
 import { LoadingSpinner } from '../components/ui/LoadingSpinner'
 import { ErrorMessage } from '../components/ui/ErrorMessage'
+import { Pagination } from '../components/ui/Pagination'
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { openInNewTab, apiUrlToWebUrl } from '../lib/utils/url'
 import type { GitHubNotification } from '../types/github'
@@ -106,9 +107,11 @@ export default function InboxPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [autoLoadMore, setAutoLoadMore] = useState(() => {
     try {
-      return localStorage.getItem('autoLoadMore') === '1'
+      const stored = localStorage.getItem('autoLoadMore')
+      // Default to true if not set
+      return stored === null ? true : stored === '1'
     } catch {
-      return false
+      return true
     }
   })
 
@@ -227,6 +230,9 @@ export default function InboxPage() {
     () => data?.pages?.flat() ?? [],
     [data]
   )
+
+  // Track loaded pages count for pagination display
+  const loadedPagesCount = data?.pages?.length ?? 0
 
   // Derive repository list for sidebar (respect unread + reason filters, but not repo filter itself)
   const availableRepos = useMemo(() => {
@@ -660,6 +666,8 @@ export default function InboxPage() {
                 filteredNotifications.length === 1 ? '' : 's'
               }`}
           {unreadCount > 0 && ` · ${unreadCount} unread`}
+          {loadedPagesCount > 1 && ` · ${loadedPagesCount} pages`}
+          {hasNextPage && ' · scroll for more'}
         </span>
         <span className="text-[#6e7681]">
           Prefer Triaje notifications on the go with GitHub Mobile for{' '}
@@ -697,19 +705,35 @@ export default function InboxPage() {
             />
           </div>
 
-          {hasNextPage && (
+          {/* Pagination footer */}
+          {(hasNextPage || loadedPagesCount > 1) && (
             <div
-              className="px-4 py-3 flex items-center justify-center"
+              className="px-4 py-3 flex items-center justify-between"
               style={{ borderTop: '1px solid #21262d' }}
             >
-              <button
-                onClick={() => fetchNextPage()}
-                disabled={isFetchingNextPage}
-                className="px-3 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50"
-                style={{ borderColor: '#30363d' }}
-              >
-                {isFetchingNextPage ? 'Loading…' : 'Load more'}
-              </button>
+              <span className="text-sm text-[#8b949e]">
+                {loadedPagesCount} page{loadedPagesCount !== 1 ? 's' : ''} loaded
+                {hasNextPage && ' · more available'}
+              </span>
+              <div className="flex items-center gap-3">
+                {hasNextPage && (
+                  <button
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                    className="px-3 py-1.5 text-sm rounded-md border text-[#e6edf3] hover:bg-[#21262d] disabled:opacity-50"
+                    style={{ borderColor: '#30363d' }}
+                  >
+                    {isFetchingNextPage ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 size={14} className="animate-spin" />
+                        Loading…
+                      </span>
+                    ) : (
+                      `Load page ${loadedPagesCount + 1}`
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
           )}
         </div>
