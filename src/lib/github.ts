@@ -26,6 +26,12 @@ const etagCache = new Map<string, string>()
 // Used to return stable data on 304 Not Modified.
 const responseCache = new Map<string, unknown>()
 
+// Clear cache on module load to ensure fresh data on app restart
+// This prevents stale cached data from persisting across sessions
+console.log('[GitHub API] Cache cleared on startup')
+etagCache.clear()
+responseCache.clear()
+
 export class GitHubAPIError extends Error {
   constructor(
     message: string,
