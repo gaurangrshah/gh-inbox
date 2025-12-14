@@ -186,26 +186,84 @@ Native desktop application with enhanced capabilities:
 
 ## Desktop App (Tauri)
 
+The desktop app wraps the React frontend in a native window using Tauri v2, providing secure token storage, system tray integration, and native OS features.
+
 ### Prerequisites
 
-- Rust 1.75+ (install via [rustup](https://rustup.rs/))
-- System dependencies for your platform:
-  - **macOS**: Xcode Command Line Tools
-  - **Windows**: Visual Studio Build Tools, WebView2
-  - **Linux**: `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`
+#### Rust
+```bash
+# Install Rust via rustup
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Verify installation
+rustc --version  # Should be 1.75+
+```
+
+#### Platform-Specific Dependencies
+
+<details>
+<summary><strong>Linux (Ubuntu/Debian)</strong></summary>
+
+```bash
+sudo apt-get update
+sudo apt-get install -y \
+  libwebkit2gtk-4.1-dev \
+  libgtk-3-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev \
+  libssl-dev \
+  pkg-config
+```
+
+**Why these packages?**
+- `libwebkit2gtk-4.1-dev` - WebView for rendering the UI
+- `libgtk-3-dev` - GTK3 for native window management
+- `libayatana-appindicator3-dev` - System tray support
+- `librsvg2-dev` - SVG icon rendering
+- `libssl-dev` - TLS/SSL support
+- `pkg-config` - Build configuration
+
+</details>
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+```bash
+xcode-select --install
+```
+
+</details>
+
+<details>
+<summary><strong>Windows</strong></summary>
+
+1. Install [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+2. Install [WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (usually pre-installed on Windows 10/11)
+
+</details>
 
 ### Running the Desktop App
 
 ```bash
-# Install Rust (if not installed)
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
-# Run in development mode
+# Development mode (with hot reload)
 pnpm tauri dev
 
 # Build for production
 pnpm tauri build
 ```
+
+**Note:** In development mode, Vite runs on `http://localhost:5173` as the dev server. The Tauri native window loads from this URL to enable hot reload. Don't use the browser URL - use the native Tauri window that opens automatically.
+
+In production builds, the frontend is bundled directly into the binary - no web server required.
+
+### Troubleshooting
+
+| Error | Solution |
+|-------|----------|
+| `gdk-3.0 was not found` | Install `libgtk-3-dev` |
+| `webkit2gtk-4.1 not found` | Install `libwebkit2gtk-4.1-dev` |
+| `pkg-config not found` | Install `pkg-config` |
+| Window doesn't open | Check all prerequisites are installed |
 
 ### Security
 
