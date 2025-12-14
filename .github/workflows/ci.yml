@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  build_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Ensure install scripts run (CI)
+        shell: bash
+        run: |
+          # Some environments set pnpm.onlyBuiltDependencies and require approval.
+          # This project requires esbuild's postinstall scripts to run for Vite.
+          pnpm config delete only-built-dependencies --global || true
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck + Build
+        run: pnpm build
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test:run
+
+      - name: Assert no committed artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          offenders="$(git ls-files | grep -E '^(node_modules/|dist/)' || true)"
+          if [ -n "$offenders" ]; then
+            echo "Committed artifacts detected:"
+            echo "$offenders"
+            exit 1
+          fi
+

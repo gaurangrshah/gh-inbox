@@ -1,8 +1,7 @@
 /**
  * Authentication Hook
  *
- * Manages GitHub Personal Access Token (PAT) authentication.
- * OAuth flow removed for security - client secrets cannot be safely stored in frontend.
+ * Manages GitHub Personal Access Token (PAT) authentication (local-only usage).
  */
 
 import { useCallback, useEffect } from 'react'

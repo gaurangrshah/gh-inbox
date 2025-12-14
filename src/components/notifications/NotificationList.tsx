@@ -136,7 +136,11 @@ export function NotificationList({
                 <NotificationItem
                   notification={notification}
                   isSelected={selectedIndex === virtualRow.index}
-                  onClick={() => setSelectedIndex(virtualRow.index)}
+                  onClick={() =>
+                    setSelectedIndex((prev) =>
+                      prev === virtualRow.index ? -1 : virtualRow.index
+                    )
+                  }
                 />
 
                 {/* Action buttons overlay */}

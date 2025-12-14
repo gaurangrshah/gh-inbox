@@ -9,9 +9,8 @@
  * - Comprehensive error handling
  */
 
+import { API_BASE_URL } from './constants'
 import type { RateLimitInfo } from '../types/github'
-
-const API_BASE_URL = 'https://api.github.com'
 
 // Store rate limit info globally
 let rateLimitInfo: RateLimitInfo = {
@@ -22,6 +21,10 @@ let rateLimitInfo: RateLimitInfo = {
 
 // ETag cache for conditional requests
 const etagCache = new Map<string, string>()
+
+// Response-body cache for conditional requests (URL -> last JSON)
+// Used to return stable data on 304 Not Modified.
+const responseCache = new Map<string, unknown>()
 
 export class GitHubAPIError extends Error {
   constructor(
@@ -80,6 +83,12 @@ async function fetchWithRetry(
     // Update rate limit info
     updateRateLimitFromHeaders(response.headers)
 
+    // 304 Not Modified is an expected outcome for conditional GETs.
+    // Treat it as a successful response so callers can return cached data.
+    if (response.status === 304) {
+      return response
+    }
+
     // Handle rate limiting with exponential backoff
     if (response.status === 403 && retries > 0) {
       const resetTime = rateLimitInfo.resetAt.getTime()
@@ -100,9 +109,16 @@ async function fetchWithRetry(
 
     // Handle other errors
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
+      const errorData: unknown = await response.json().catch(() => ({}))
+      const message =
+        errorData &&
+        typeof errorData === 'object' &&
+        'message' in errorData &&
+        typeof (errorData as Record<string, unknown>).message === 'string'
+          ? String((errorData as Record<string, unknown>).message)
+          : undefined
       throw new GitHubAPIError(
-        errorData.message || `Request failed with status ${response.status}`,
+        message || `Request failed with status ${response.status}`,
         response.status,
         response
       )
@@ -176,6 +192,7 @@ export async function githubGet<T>(
   token: string,
   useETag = true
 ): Promise<T> {
+  const url = `${API_BASE_URL}${endpoint}`
   const response = await githubRequest(endpoint, {
     method: 'GET',
     token,
@@ -184,10 +201,19 @@ export async function githubGet<T>(
 
   // Handle 304 Not Modified
   if (response.status === 304) {
-    throw new GitHubAPIError('Not modified', 304, response)
+    const cached = responseCache.get(url)
+    if (cached !== undefined) {
+      return cached as T
+    }
+    // If we don't have cached data, treat as error (should be rare).
+    throw new GitHubAPIError('Not modified (no cache)', 304, response)
   }
 
-  return response.json()
+  const data = (await response.json()) as T
+  if (useETag) {
+    responseCache.set(url, data as unknown)
+  }
+  return data
 }
 
 /**

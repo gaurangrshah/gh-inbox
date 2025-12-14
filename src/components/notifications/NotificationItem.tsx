@@ -125,9 +125,12 @@ export function NotificationItem({
       <input
         type="checkbox"
         checked={isSelected}
-        onChange={() => {}}
+        readOnly
         className="w-4 h-4 rounded border-[#30363d] bg-transparent checked:bg-[#58a6ff] focus:ring-0 focus:ring-offset-0"
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation()
+          onClick?.()
+        }}
       />
 
       {/* Unread Indicator */}

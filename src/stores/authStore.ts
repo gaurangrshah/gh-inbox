@@ -1,6 +1,6 @@
 /**
  * Authentication store using Zustand
- * Manages user authentication state and GitHub token
+ * Manages user authentication state and GitHub token (local-only usage).
  */
 
 import { create } from 'zustand'
@@ -45,7 +45,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'github-inbox-auth',
-      // Only persist token and isAuthenticated
+      // Only persist token + isAuthenticated for local usage
       partialize: (state) => ({
         token: state.token,
         isAuthenticated: state.isAuthenticated,
