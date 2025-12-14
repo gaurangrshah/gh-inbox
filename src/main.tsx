@@ -24,9 +24,10 @@ const queryClient = new QueryClient({
 })
 
 // Initialize auth from secure storage on app startup
-// In Tauri: loads token from OS keychain
+// In Tauri: loads token from OS keychain (async)
 // In browser: uses persisted localStorage state
-useAuthStore.getState().initialize()
+// Note: This is async but the App component waits for isInitialized before rendering protected routes
+void useAuthStore.getState().initialize()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
