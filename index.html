@@ -6,11 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy"
       content="
-        default-src 'self';
-        script-src 'self';
+        default-src 'self' ipc: tauri:;
+        script-src 'self' 'unsafe-eval';
         style-src 'self' 'unsafe-inline';
-        img-src 'self' https://avatars.githubusercontent.com data:;
-        connect-src 'self' https://api.github.com;
+        img-src 'self' https://avatars.githubusercontent.com https://*.githubusercontent.com data:;
+        connect-src 'self' https://api.github.com ipc: tauri: http://ipc.localhost;
       ">
     <title>GitHub Inbox</title>
   </head>
