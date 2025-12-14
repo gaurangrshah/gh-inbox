@@ -94,7 +94,7 @@ export function NotificationItem({
   return (
     <div
       onClick={onClick}
-      className={`group relative flex items-start gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 cursor-pointer transition-colors ${
+      className={`group relative flex items-start gap-3 px-4 py-3 border-b border-gray-200 dark:border-gray-800 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none ${
         isSelected
           ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-l-blue-500'
           : 'hover:bg-gray-50 dark:hover:bg-gray-900/50'

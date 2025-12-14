@@ -29,8 +29,11 @@ export default function LoginPage() {
       <div className="max-w-md w-full px-6">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl items-center justify-center mb-4">
-            <Github size={32} className="text-white" />
+          <div
+            className="inline-flex w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl items-center justify-center mb-4"
+            aria-label="GitHub Inbox logo"
+          >
+            <Github size={32} className="text-white" aria-hidden="true" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             GitHub Inbox

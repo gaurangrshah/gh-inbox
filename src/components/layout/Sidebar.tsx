@@ -6,7 +6,7 @@
 
 import { Inbox, CheckCircle, Filter, Settings } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
-import { useFilterStore } from '../../stores/filterStore'
+import { useFilterStore, type NotificationReason } from '../../stores/filterStore'
 import { NOTIFICATION_REASON_LABELS } from '../../lib/constants'
 
 /**
@@ -32,10 +32,11 @@ export function Sidebar() {
   const isActive = (path: string) => location.pathname === path
 
   const toggleReason = (reason: string) => {
-    if (selectedReasons.includes(reason as any)) {
-      setReasonFilter(selectedReasons.filter((r) => r !== reason))
+    const typedReason = reason as NotificationReason
+    if (selectedReasons.includes(typedReason)) {
+      setReasonFilter(selectedReasons.filter((r) => r !== typedReason))
     } else {
-      setReasonFilter([...selectedReasons, reason as any])
+      setReasonFilter([...selectedReasons, typedReason])
     }
   }
 
@@ -113,7 +114,7 @@ export function Sidebar() {
               <label key={reason} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={selectedReasons.includes(reason as any)}
+                  checked={selectedReasons.includes(reason as NotificationReason)}
                   onChange={() => toggleReason(reason)}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
